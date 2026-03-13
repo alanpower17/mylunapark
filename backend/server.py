@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, UploadFile, File
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -12,6 +12,7 @@ import uuid
 from datetime import datetime, timezone, timedelta
 import jwt
 import bcrypt
+import base64
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -600,6 +601,82 @@ async def get_organizer_stats(user: dict = Depends(require_organizer)):
         "total_coupons": total_coupons,
         "total_usages": total_usages
     }
+
+# ==================== IMAGE UPLOAD ====================
+
+class ImageUploadResponse(BaseModel):
+    success: bool
+    image_url: str
+    message: str
+
+@api_router.post("/upload/image", response_model=ImageUploadResponse)
+async def upload_image(
+    file: UploadFile = File(...),
+    user: dict = Depends(require_organizer)
+):
+    """Upload an image and return base64 data URL"""
+    try:
+        # Validate file type
+        allowed_types = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+        if file.content_type not in allowed_types:
+            raise HTTPException(status_code=400, detail="Tipo file non supportato. Usa JPG, PNG, WebP o GIF.")
+        
+        # Read and encode file
+        contents = await file.read()
+        
+        # Check file size (max 5MB)
+        if len(contents) > 5 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="File troppo grande. Massimo 5MB.")
+        
+        # Convert to base64 data URL
+        base64_encoded = base64.b64encode(contents).decode('utf-8')
+        data_url = f"data:{file.content_type};base64,{base64_encoded}"
+        
+        return ImageUploadResponse(
+            success=True,
+            image_url=data_url,
+            message="Immagine caricata con successo"
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error uploading image: {e}")
+        raise HTTPException(status_code=500, detail="Errore durante il caricamento dell'immagine")
+
+@api_router.put("/lunaparks/{park_id}/image")
+async def update_park_image(
+    park_id: str,
+    image_url: str,
+    user: dict = Depends(require_organizer)
+):
+    """Update luna park image"""
+    park = await db.luna_parks.find_one({"id": park_id}, {"_id": 0})
+    if not park:
+        raise HTTPException(status_code=404, detail="Luna Park non trovato")
+    if park["organizer_id"] != user["id"] and user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Non autorizzato")
+    
+    await db.luna_parks.update_one({"id": park_id}, {"$set": {"image_url": image_url}})
+    return {"message": "Immagine aggiornata con successo"}
+
+class UpdateParkImageRequest(BaseModel):
+    image_url: str
+
+@api_router.put("/lunaparks/{park_id}/update-image")
+async def update_park_image_body(
+    park_id: str,
+    data: UpdateParkImageRequest,
+    user: dict = Depends(require_organizer)
+):
+    """Update luna park image via request body"""
+    park = await db.luna_parks.find_one({"id": park_id}, {"_id": 0})
+    if not park:
+        raise HTTPException(status_code=404, detail="Luna Park non trovato")
+    if park["organizer_id"] != user["id"] and user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Non autorizzato")
+    
+    await db.luna_parks.update_one({"id": park_id}, {"$set": {"image_url": data.image_url}})
+    return {"message": "Immagine aggiornata con successo"}
 
 # ==================== SEED DATA ====================
 

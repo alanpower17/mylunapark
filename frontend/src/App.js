@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import axios from "axios";
-import { Search, MapPin, Ticket, Clock, ChevronRight, User, LogOut, Settings, Home, Star, Menu, X, Check, AlertCircle, Loader2, Aperture, Shield, Building2, Gift, Users, BarChart3, Plus, Edit, Trash2, Eye, EyeOff } from "lucide-react";
+import { Search, MapPin, Ticket, Clock, ChevronRight, User, LogOut, Settings, Home, Star, Menu, X, Check, AlertCircle, Loader2, Aperture, Shield, Building2, Gift, Users, BarChart3, Plus, Edit, Trash2, Eye, EyeOff, Upload, Camera, Image } from "lucide-react";
 
 // Use Aperture as FerrisWheel icon alternative
 const FerrisWheel = Aperture;
@@ -128,9 +128,14 @@ const Header = ({ user, logout }) => {
                   </button>
                 </div>
               ) : (
-                <Link to="/login" className="btn-luna text-sm" data-testid="login-btn">
-                  Accedi
-                </Link>
+                <div className="flex items-center gap-2">
+                  <Link to="/register" className="btn-luna text-sm" data-testid="header-register-btn">
+                    <Gift className="w-4 h-4 inline mr-1" /> Iscriviti Gratis
+                  </Link>
+                  <Link to="/login" className="nav-link text-amber-300 hover:text-amber-200" data-testid="login-btn">
+                    Accedi
+                  </Link>
+                </div>
               )}
             </nav>
 
@@ -165,9 +170,14 @@ const Header = ({ user, logout }) => {
                   <LogOut className="w-4 h-4 inline mr-2" /> Esci ({user.name})
                 </button>
               ) : (
-                <Link to="/login" className="nav-link" onClick={() => setMenuOpen(false)} data-testid="mobile-login-link">
-                  <User className="w-4 h-4 inline mr-2" /> Accedi
-                </Link>
+                <>
+                  <Link to="/register" className="nav-link text-amber-400 font-bold" onClick={() => setMenuOpen(false)} data-testid="mobile-register-link">
+                    <Gift className="w-4 h-4 inline mr-2" /> Iscriviti Gratis
+                  </Link>
+                  <Link to="/login" className="nav-link" onClick={() => setMenuOpen(false)} data-testid="mobile-login-link">
+                    <User className="w-4 h-4 inline mr-2" /> Accedi
+                  </Link>
+                </>
               )}
             </nav>
           )}
@@ -260,22 +270,6 @@ const HomePage = () => {
               ))}
             </div>
           )}
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="px-4 py-12 border-t border-amber-500/20">
-        <div className="max-w-2xl mx-auto text-center">
-          <Gift className="w-12 h-12 text-pink-400 mx-auto mb-4" />
-          <h3 className="text-2xl font-bold text-amber-300 mb-3">
-            Registrati per vantaggi esclusivi!
-          </h3>
-          <p className="text-amber-100/70 mb-6">
-            Salva i tuoi coupon preferiti e ricevi notifiche sulle nuove offerte
-          </p>
-          <Link to="/register" className="btn-luna inline-block" data-testid="cta-register-btn">
-            Iscriviti Gratis
-          </Link>
         </div>
       </section>
 
@@ -1041,6 +1035,116 @@ const DashboardPage = () => {
   );
 };
 
+// Image Upload Component
+const ImageUploader = ({ currentImage, onImageChange, parkId, auth }) => {
+  const [uploading, setUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(currentImage);
+  const fileInputRef = useRef(null);
+
+  const handleFileSelect = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Tipo file non supportato. Usa JPG, PNG, WebP o GIF.');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File troppo grande. Massimo 5MB.');
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await axios.post(`${API}/upload/image`, formData, {
+        headers: {
+          ...auth.getAuthHeaders(),
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data.success) {
+        setPreviewUrl(response.data.image_url);
+        
+        // If we have a parkId, save to the park
+        if (parkId && parkId !== 'new') {
+          await axios.put(`${API}/lunaparks/${parkId}/update-image`, 
+            { image_url: response.data.image_url },
+            { headers: auth.getAuthHeaders() }
+          );
+        }
+        
+        onImageChange(response.data.image_url);
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Errore durante il caricamento dell\'immagine');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <label className="block text-amber-200 text-sm mb-2">Immagine Luna Park</label>
+      
+      {/* Preview */}
+      <div className="relative w-full h-48 bg-amber-400/10 rounded-xl overflow-hidden border-2 border-dashed border-amber-400/30 hover:border-amber-400/50 transition-colors">
+        {previewUrl ? (
+          <>
+            <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="btn-luna text-sm"
+                disabled={uploading}
+              >
+                <Camera className="w-4 h-4 inline mr-1" />
+                Cambia immagine
+              </button>
+            </div>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full h-full flex flex-col items-center justify-center text-amber-400/60 hover:text-amber-400 transition-colors"
+            disabled={uploading}
+          >
+            {uploading ? (
+              <Loader2 className="w-10 h-10 animate-spin" />
+            ) : (
+              <>
+                <Upload className="w-10 h-10 mb-2" />
+                <span className="text-sm">Clicca per caricare un'immagine</span>
+                <span className="text-xs text-amber-400/40 mt-1">JPG, PNG, WebP, GIF (max 5MB)</span>
+              </>
+            )}
+          </button>
+        )}
+      </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        onChange={handleFileSelect}
+        className="hidden"
+        data-testid="image-upload-input"
+      />
+    </div>
+  );
+};
+
 // Park Management Page
 const ParkManagementPage = () => {
   const { parkId } = useParams();
@@ -1058,7 +1162,8 @@ const ParkManagementPage = () => {
     region: '',
     phone: '',
     opening_hours: '',
-    coupon_cooldown_hours: 24
+    coupon_cooldown_hours: 24,
+    image_url: ''
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -1157,6 +1262,14 @@ const ParkManagementPage = () => {
                 {error}
               </div>
             )}
+
+            {/* Image Upload */}
+            <ImageUploader 
+              currentImage={formData.image_url} 
+              onImageChange={(url) => setFormData({ ...formData, image_url: url })}
+              parkId={parkId}
+              auth={auth}
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>

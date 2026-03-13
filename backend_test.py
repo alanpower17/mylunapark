@@ -2,6 +2,8 @@ import requests
 import sys
 from datetime import datetime
 import json
+import io
+import base64
 
 class LunaParkAPITester:
     def __init__(self, base_url="https://ciao-app-120.preview.emergentagent.com/api"):
@@ -235,6 +237,89 @@ class LunaParkAPITester:
         )
         return success
 
+    def test_image_upload(self):
+        """Test image upload endpoint"""
+        # Create a small test image (1x1 pixel PNG)
+        test_image_b64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAFuicJYgwAAAABJRU5ErkJggg=="
+        test_image_bytes = base64.b64decode(test_image_b64)
+        
+        # Prepare multipart form data
+        files = {'file': ('test.png', io.BytesIO(test_image_bytes), 'image/png')}
+        headers = self.get_auth_headers(self.org_token)
+        # Remove Content-Type for multipart request
+        headers.pop('Content-Type', None)
+        
+        url = f"{self.base_url}/upload/image"
+        print(f"\n🔍 Testing Image Upload...")
+        print(f"   POST {url}")
+        
+        try:
+            response = requests.post(url, files=files, headers=headers)
+            success = response.status_code == 200
+            
+            if success:
+                self.tests_passed += 1
+                print(f"✅ Passed - Status: {response.status_code}")
+                response_data = response.json()
+                if 'image_url' in response_data and response_data.get('success'):
+                    print(f"   📸 Image URL returned: {len(response_data['image_url'])} chars")
+                    return True, response_data
+                else:
+                    print(f"   ⚠️  No image_url in response: {response_data}")
+                    return False, {}
+            else:
+                print(f"❌ Failed - Expected 200, got {response.status_code}")
+                if response.text:
+                    print(f"   Response: {response.text[:200]}")
+                return False, {}
+                
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            return False, {}
+        finally:
+            self.tests_run += 1
+
+    def test_image_upload_unauthorized(self):
+        """Test image upload without auth (should fail)"""
+        test_image_b64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAFuicJYgwAAAABJRU5ErkJggg=="
+        test_image_bytes = base64.b64decode(test_image_b64)
+        
+        files = {'file': ('test.png', io.BytesIO(test_image_bytes), 'image/png')}
+        
+        url = f"{self.base_url}/upload/image"
+        print(f"\n🔍 Testing Image Upload (Unauthorized)...")
+        print(f"   POST {url}")
+        
+        try:
+            response = requests.post(url, files=files)
+            success = response.status_code == 401  # Should be unauthorized
+            
+            if success:
+                self.tests_passed += 1
+                print(f"✅ Passed - Status: {response.status_code} (Unauthorized as expected)")
+                return True
+            else:
+                print(f"❌ Failed - Expected 401, got {response.status_code}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            return False
+        finally:
+            self.tests_run += 1
+
+    def test_park_image_update(self, park_id, image_url):
+        """Test updating park image"""
+        success, response = self.run_test(
+            "Update Park Image",
+            "PUT",
+            f"lunaparks/{park_id}/update-image",
+            200,
+            data={"image_url": image_url},
+            headers=self.get_auth_headers(self.org_token)
+        )
+        return success
+
 def main():
     # Setup
     tester = LunaParkAPITester()
@@ -297,6 +382,20 @@ def main():
 
     # Test user registration
     tester.test_register_new_user()
+
+    # Test image upload functionality
+    if tester.org_token:
+        print("\n🖼️  Testing Image Upload Features...")
+        
+        # Test unauthorized upload
+        tester.test_image_upload_unauthorized()
+        
+        # Test authorized upload
+        upload_success, upload_data = tester.test_image_upload()
+        
+        # Test updating park image if upload worked
+        if upload_success and upload_data.get('image_url') and test_park:
+            tester.test_park_image_update(test_park['id'], upload_data['image_url'])
 
     # Print results
     print("\n" + "=" * 50)
