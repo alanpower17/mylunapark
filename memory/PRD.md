@@ -34,6 +34,8 @@ Sistema di coupon per Luna Park in Italia con due interfacce:
 ✅ Design tema notturno stile luna park italiano
 ✅ Dati demo (3 luna park, giostre, coupon)
 ✅ Device ID per utenti non registrati
+✅ **Upload immagini** per luna park (13 Marzo 2026)
+✅ **Tasto "Iscriviti Gratis"** visibile nell'header (13 Marzo 2026)
 
 ## Backlog (P0/P1/P2)
 
@@ -44,7 +46,6 @@ Sistema di coupon per Luna Park in Italia con due interfacce:
 - Geolocalizzazione per trovare luna park vicini
 - Notifiche push per nuovi coupon
 - QR Code per validazione coupon
-- Upload immagini luna park/giostre
 
 ### P2 - Nice to have
 - Integrazione pubblicità (AdMob/Google Ads)
