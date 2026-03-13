@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, createContext, useContext } f
 import "@/App.css";
 import { BrowserRouter, Routes, Route, Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import axios from "axios";
-import { Search, MapPin, Ticket, Clock, ChevronRight, User, LogOut, Settings, Home, Star, Menu, X, Check, AlertCircle, Loader2, Aperture, Shield, Building2, Gift, Users, BarChart3, Plus, Edit, Trash2, Eye, EyeOff, Upload, Camera, Image } from "lucide-react";
+import { Search, MapPin, Ticket, Clock, ChevronRight, User, LogOut, Settings, Home, Star, Menu, X, Check, AlertCircle, Loader2, Aperture, Shield, Building2, Gift, Users, BarChart3, Plus, Edit, Trash2, Eye, EyeOff, Upload, Camera, Image, Calendar } from "lucide-react";
 
 // Use Aperture as FerrisWheel icon alternative
 const FerrisWheel = Aperture;
@@ -321,15 +321,22 @@ const ParkCard = ({ park }) => {
         </div>
         <div className="p-4">
           <h3 className="text-xl font-bold text-amber-400 mb-2">{park.name}</h3>
-          <p className="text-amber-100/70 text-sm mb-3 line-clamp-2">{park.description}</p>
+          {park.description && (
+            <p className="text-amber-100/70 text-sm mb-3 line-clamp-2">{park.description}</p>
+          )}
           <div className="flex items-center gap-2 text-sm text-amber-200/60">
             <MapPin className="w-4 h-4" />
             <span>{park.city}, {park.region}</span>
           </div>
-          {park.opening_hours && (
+          {(park.opening_date || park.closing_date) && (
             <div className="flex items-center gap-2 text-sm text-amber-200/60 mt-1">
-              <Clock className="w-4 h-4" />
-              <span>{park.opening_hours}</span>
+              <Calendar className="w-4 h-4" />
+              <span>
+                {park.opening_date && park.closing_date 
+                  ? `${park.opening_date} - ${park.closing_date}`
+                  : park.opening_date || park.closing_date
+                }
+              </span>
             </div>
           )}
           <div className="mt-4 flex items-center justify-between">
