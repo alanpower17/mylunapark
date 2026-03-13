@@ -1568,7 +1568,7 @@ const CouponsManager = ({ parkId, rides, coupons, onUpdate, auth }) => {
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-bold text-amber-400">Coupon ({coupons.length})</h3>
         <button 
-          onClick={() => { setShowForm(true); setEditingCoupon(null); setFormData({ ride_id: '', discount_amount: 1, discount_description: '1€ di sconto', is_active: true }); }} 
+          onClick={() => { setShowForm(true); setEditingCoupon(null); setFormData({ ride_id: '', discount_description: '', is_active: true }); }} 
           className="btn-luna text-sm"
           disabled={rides.length === 0}
           data-testid="add-coupon-btn"
@@ -1600,33 +1600,17 @@ const CouponsManager = ({ parkId, rides, coupons, onUpdate, auth }) => {
               ))}
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-amber-200 text-xs mb-1">Sconto in € *</label>
-              <input
-                type="number"
-                step="0.5"
-                min="0.5"
-                placeholder="es: 1"
-                value={formData.discount_amount}
-                onChange={(e) => setFormData({ ...formData, discount_amount: parseFloat(e.target.value) })}
-                className="search-input rounded-xl text-sm"
-                required
-                data-testid="coupon-amount-input"
-              />
-            </div>
-            <div>
-              <label className="block text-amber-200 text-xs mb-1">Descrizione sconto *</label>
-              <input
-                type="text"
-                placeholder="es: 1€ di sconto"
-                value={formData.discount_description}
-                onChange={(e) => setFormData({ ...formData, discount_description: e.target.value })}
-                className="search-input rounded-xl text-sm"
-                required
-                data-testid="coupon-description-input"
-              />
-            </div>
+          <div>
+            <label className="block text-amber-200 text-xs mb-1">Sconto *</label>
+            <input
+              type="text"
+              placeholder="es: 1€ di sconto"
+              value={formData.discount_description}
+              onChange={(e) => setFormData({ ...formData, discount_description: e.target.value })}
+              className="search-input rounded-xl text-sm"
+              required
+              data-testid="coupon-description-input"
+            />
           </div>
           <label className="flex items-center gap-2 text-amber-200">
             <input
