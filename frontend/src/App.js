@@ -1585,39 +1585,48 @@ const CouponsManager = ({ parkId, rides, coupons, onUpdate, auth }) => {
 
       {showForm && (
         <form onSubmit={handleSubmit} className="bg-amber-400/10 rounded-xl p-4 mb-4 space-y-3">
-          <select
-            value={formData.ride_id}
-            onChange={(e) => setFormData({ ...formData, ride_id: e.target.value })}
-            className="search-input rounded-xl text-sm"
-            required
-            data-testid="coupon-ride-select"
-          >
-            <option value="">Seleziona giostra *</option>
-            {rides.map((ride) => (
-              <option key={ride.id} value={ride.id}>{ride.name} (#{ride.number})</option>
-            ))}
-          </select>
+          <div>
+            <label className="block text-amber-200 text-xs mb-1">Giostra *</label>
+            <select
+              value={formData.ride_id}
+              onChange={(e) => setFormData({ ...formData, ride_id: e.target.value })}
+              className="search-input rounded-xl text-sm"
+              required
+              data-testid="coupon-ride-select"
+            >
+              <option value="">Seleziona giostra</option>
+              {rides.map((ride) => (
+                <option key={ride.id} value={ride.id}>{ride.name} (#{ride.number})</option>
+              ))}
+            </select>
+          </div>
           <div className="grid grid-cols-2 gap-3">
-            <input
-              type="number"
-              step="0.5"
-              min="0.5"
-              placeholder="Sconto (€) *"
-              value={formData.discount_amount}
-              onChange={(e) => setFormData({ ...formData, discount_amount: parseFloat(e.target.value) })}
-              className="search-input rounded-xl text-sm"
-              required
-              data-testid="coupon-amount-input"
-            />
-            <input
-              type="text"
-              placeholder="Descrizione sconto *"
-              value={formData.discount_description}
-              onChange={(e) => setFormData({ ...formData, discount_description: e.target.value })}
-              className="search-input rounded-xl text-sm"
-              required
-              data-testid="coupon-description-input"
-            />
+            <div>
+              <label className="block text-amber-200 text-xs mb-1">Sconto in € *</label>
+              <input
+                type="number"
+                step="0.5"
+                min="0.5"
+                placeholder="es: 1"
+                value={formData.discount_amount}
+                onChange={(e) => setFormData({ ...formData, discount_amount: parseFloat(e.target.value) })}
+                className="search-input rounded-xl text-sm"
+                required
+                data-testid="coupon-amount-input"
+              />
+            </div>
+            <div>
+              <label className="block text-amber-200 text-xs mb-1">Descrizione sconto *</label>
+              <input
+                type="text"
+                placeholder="es: 1€ di sconto"
+                value={formData.discount_description}
+                onChange={(e) => setFormData({ ...formData, discount_description: e.target.value })}
+                className="search-input rounded-xl text-sm"
+                required
+                data-testid="coupon-description-input"
+              />
+            </div>
           </div>
           <label className="flex items-center gap-2 text-amber-200">
             <input
