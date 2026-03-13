@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, createContext, useContext } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -20,8 +20,10 @@ const getDeviceId = () => {
   return deviceId;
 };
 
-// Auth Context
-const useAuth = () => {
+// Auth Context - Real React Context for shared state
+const AuthContext = createContext(null);
+
+const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -29,7 +31,12 @@ const useAuth = () => {
     const token = localStorage.getItem('lunapark_token');
     const userData = localStorage.getItem('lunapark_user');
     if (token && userData) {
-      setUser(JSON.parse(userData));
+      try {
+        setUser(JSON.parse(userData));
+      } catch (e) {
+        localStorage.removeItem('lunapark_token');
+        localStorage.removeItem('lunapark_user');
+      }
     }
     setLoading(false);
   }, []);
@@ -51,7 +58,19 @@ const useAuth = () => {
     return token ? { Authorization: `Bearer ${token}` } : {};
   };
 
-  return { user, loading, login, logout, getAuthHeaders };
+  return (
+    <AuthContext.Provider value={{ user, loading, login, logout, getAuthHeaders }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };
 
 // Confetti Component
@@ -1776,7 +1795,7 @@ const AdminPage = () => {
 };
 
 // Main App Component
-function App() {
+function AppContent() {
   const auth = useAuth();
 
   // Seed data on first load
@@ -1814,6 +1833,14 @@ function App() {
         </Routes>
       </BrowserRouter>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 
