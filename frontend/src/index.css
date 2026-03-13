@@ -57,25 +57,32 @@ h1, h2, h3, h4, h5, h6 {
     font-family: 'Fredoka', sans-serif;
 }
 
-/* Glow Effects */
+/* Elegant Glow Effects - Subtle */
 .glow-gold {
-    box-shadow: 0 0 20px rgba(251, 191, 36, 0.5), 0 0 40px rgba(251, 191, 36, 0.3);
+    box-shadow: 0 4px 20px rgba(251, 191, 36, 0.15), 0 0 0 1px rgba(251, 191, 36, 0.1);
 }
 
 .glow-pink {
-    box-shadow: 0 0 20px rgba(236, 72, 153, 0.5), 0 0 40px rgba(236, 72, 153, 0.3);
+    box-shadow: 0 4px 20px rgba(236, 72, 153, 0.15), 0 0 0 1px rgba(236, 72, 153, 0.1);
 }
 
 .glow-cyan {
-    box-shadow: 0 0 15px rgba(34, 211, 238, 0.4);
+    box-shadow: 0 4px 15px rgba(34, 211, 238, 0.12);
 }
 
+/* Elegant Text Effects - No Neon */
 .text-glow-gold {
-    text-shadow: 0 0 10px rgba(251, 191, 36, 0.8), 0 0 20px rgba(251, 191, 36, 0.5), 0 0 30px rgba(251, 191, 36, 0.3);
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #fcd34d 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .text-glow-pink {
-    text-shadow: 0 0 10px rgba(236, 72, 153, 0.8), 0 0 20px rgba(236, 72, 153, 0.5);
+  background: linear-gradient(135deg, #ec4899 0%, #d946ef 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* Starry Background */
@@ -111,13 +118,14 @@ h1, h2, h3, h4, h5, h6 {
     100% { transform: translateY(-100px); }
 }
 
-/* Ticket Card Style */
+/* Ticket Card Style - Refined */
 .ticket-card {
-    background: linear-gradient(145deg, rgba(26, 10, 46, 0.9) 0%, rgba(15, 22, 40, 0.9) 100%);
-    border: 2px solid rgba(251, 191, 36, 0.3);
+    background: linear-gradient(145deg, rgba(26, 10, 46, 0.95) 0%, rgba(15, 22, 40, 0.95) 100%);
+    border: 1px solid rgba(251, 191, 36, 0.15);
     border-radius: 16px;
     position: relative;
     overflow: hidden;
+    backdrop-filter: blur(10px);
 }
 
 .ticket-card::before {
@@ -126,49 +134,35 @@ h1, h2, h3, h4, h5, h6 {
     top: 0;
     left: 0;
     right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #fbbf24, #ec4899, #22d3ee, #fbbf24);
-    background-size: 200% 100%;
-    animation: gradient-shift 3s linear infinite;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.5), transparent);
 }
 
-@keyframes gradient-shift {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 200% 50%; }
-}
-
-/* Marquee Light Effect */
+/* Refined Border Effect */
 .marquee-border {
     position: relative;
-    border: 3px solid transparent;
-    background: linear-gradient(var(--lunapark-purple), var(--lunapark-purple)) padding-box,
-                linear-gradient(90deg, #fbbf24, #ec4899, #d946ef, #22d3ee, #fbbf24) border-box;
-    background-size: 100% 100%, 300% 100%;
-    animation: marquee-glow 4s linear infinite;
+    border: 1px solid rgba(251, 191, 36, 0.2);
+    border-radius: 16px;
+    background: linear-gradient(145deg, rgba(26, 10, 46, 0.95) 0%, rgba(15, 22, 40, 0.95) 100%);
 }
 
-@keyframes marquee-glow {
-    0% { background-position: 0% 0%, 0% 50%; }
-    100% { background-position: 0% 0%, 300% 50%; }
-}
-
-/* Button Styles */
+/* Button Styles - Refined */
 .btn-luna {
     background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
     color: #0a0a1a;
     font-family: 'Fredoka', sans-serif;
     font-weight: 600;
     padding: 12px 24px;
-    border-radius: 50px;
+    border-radius: 12px;
     border: none;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.25);
 }
 
 .btn-luna:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 25px rgba(251, 191, 36, 0.6);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.35);
 }
 
 .btn-luna:active {
@@ -178,34 +172,33 @@ h1, h2, h3, h4, h5, h6 {
 .btn-luna-pink {
     background: linear-gradient(135deg, #ec4899 0%, #d946ef 100%);
     color: white;
+    box-shadow: 0 2px 8px rgba(236, 72, 153, 0.25);
 }
 
 .btn-luna-pink:hover {
-    box-shadow: 0 6px 25px rgba(236, 72, 153, 0.6);
+    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.35);
 }
 
-/* Use Now Button - Special */
+/* Use Now Button - Refined */
 .btn-use-now {
     background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
     color: white;
     font-family: 'Fredoka', sans-serif;
-    font-weight: 700;
-    font-size: 1.25rem;
-    padding: 16px 40px;
-    border-radius: 50px;
-    border: 3px solid rgba(255, 255, 255, 0.3);
+    font-weight: 600;
+    font-size: 1.1rem;
+    padding: 14px 32px;
+    border-radius: 12px;
+    border: none;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.5),
-                inset 0 2px 10px rgba(255, 255, 255, 0.2);
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 10px rgba(34, 197, 94, 0.3);
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
 }
 
 .btn-use-now:hover {
-    transform: scale(1.05);
-    box-shadow: 0 8px 30px rgba(34, 197, 94, 0.7),
-                inset 0 2px 10px rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.4);
 }
 
 .btn-use-now:disabled {
@@ -242,26 +235,26 @@ h1, h2, h3, h4, h5, h6 {
     z-index: 1000;
 }
 
-/* Search Input */
+/* Search Input - Refined */
 .search-input {
-    background: rgba(26, 10, 46, 0.8);
-    border: 2px solid rgba(251, 191, 36, 0.3);
-    border-radius: 50px;
+    background: rgba(15, 22, 40, 0.8);
+    border: 1px solid rgba(251, 191, 36, 0.2);
+    border-radius: 12px;
     padding: 12px 20px 12px 48px;
     color: #fef3c7;
     font-size: 1rem;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     width: 100%;
 }
 
 .search-input:focus {
     outline: none;
-    border-color: #fbbf24;
-    box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+    border-color: rgba(251, 191, 36, 0.5);
+    background: rgba(15, 22, 40, 0.95);
 }
 
 .search-input::placeholder {
-    color: rgba(254, 243, 199, 0.5);
+    color: rgba(254, 243, 199, 0.4);
 }
 
 /* Card Hover Effects */
