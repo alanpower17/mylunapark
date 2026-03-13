@@ -1,76 +1,356 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+    /* Luna Park Night Theme Colors */
+    --lunapark-dark: #0a0a1a;
+    --lunapark-purple: #1a0a2e;
+    --lunapark-blue: #0f1628;
+    --lunapark-gold: #fbbf24;
+    --lunapark-gold-light: #fcd34d;
+    --lunapark-pink: #ec4899;
+    --lunapark-magenta: #d946ef;
+    --lunapark-cyan: #22d3ee;
+    --lunapark-red: #ef4444;
+    
+    /* Theme Variables */
+    --background: 240 20% 6%;
+    --foreground: 45 93% 90%;
+    --card: 250 40% 10%;
+    --card-foreground: 45 93% 90%;
+    --popover: 250 40% 12%;
+    --popover-foreground: 45 93% 90%;
+    --primary: 45 93% 56%;
+    --primary-foreground: 240 20% 6%;
+    --secondary: 280 70% 50%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 250 30% 18%;
+    --muted-foreground: 45 30% 70%;
+    --accent: 330 80% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 250 30% 20%;
+    --input: 250 30% 18%;
+    --ring: 45 93% 56%;
+    --radius: 0.75rem;
+}
+
+* {
+    box-sizing: border-box;
+}
+
 body {
     margin: 0;
-    font-family:
-        -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-        "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-        sans-serif;
+    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background: linear-gradient(135deg, var(--lunapark-dark) 0%, var(--lunapark-purple) 50%, var(--lunapark-blue) 100%);
+    min-height: 100vh;
+    color: #fef3c7;
 }
 
-code {
-    font-family:
-        source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Fredoka', sans-serif;
 }
 
-@layer base {
-    :root {
-        --background: 0 0% 100%;
-        --foreground: 0 0% 3.9%;
-        --card: 0 0% 100%;
-        --card-foreground: 0 0% 3.9%;
-        --popover: 0 0% 100%;
-        --popover-foreground: 0 0% 3.9%;
-        --primary: 0 0% 9%;
-        --primary-foreground: 0 0% 98%;
-        --secondary: 0 0% 96.1%;
-        --secondary-foreground: 0 0% 9%;
-        --muted: 0 0% 96.1%;
-        --muted-foreground: 0 0% 45.1%;
-        --accent: 0 0% 96.1%;
-        --accent-foreground: 0 0% 9%;
-        --destructive: 0 84.2% 60.2%;
-        --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 89.8%;
-        --input: 0 0% 89.8%;
-        --ring: 0 0% 3.9%;
-        --chart-1: 12 76% 61%;
-        --chart-2: 173 58% 39%;
-        --chart-3: 197 37% 24%;
-        --chart-4: 43 74% 66%;
-        --chart-5: 27 87% 67%;
-        --radius: 0.5rem;
+/* Glow Effects */
+.glow-gold {
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.5), 0 0 40px rgba(251, 191, 36, 0.3);
+}
+
+.glow-pink {
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.5), 0 0 40px rgba(236, 72, 153, 0.3);
+}
+
+.glow-cyan {
+    box-shadow: 0 0 15px rgba(34, 211, 238, 0.4);
+}
+
+.text-glow-gold {
+    text-shadow: 0 0 10px rgba(251, 191, 36, 0.8), 0 0 20px rgba(251, 191, 36, 0.5), 0 0 30px rgba(251, 191, 36, 0.3);
+}
+
+.text-glow-pink {
+    text-shadow: 0 0 10px rgba(236, 72, 153, 0.8), 0 0 20px rgba(236, 72, 153, 0.5);
+}
+
+/* Starry Background */
+.starry-bg {
+    position: relative;
+    overflow: hidden;
+}
+
+.starry-bg::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        radial-gradient(2px 2px at 20px 30px, #fcd34d, transparent),
+        radial-gradient(2px 2px at 40px 70px, #ec4899, transparent),
+        radial-gradient(1px 1px at 90px 40px, #22d3ee, transparent),
+        radial-gradient(2px 2px at 130px 80px, #fcd34d, transparent),
+        radial-gradient(1px 1px at 160px 30px, #d946ef, transparent),
+        radial-gradient(2px 2px at 200px 60px, #fcd34d, transparent),
+        radial-gradient(1px 1px at 250px 90px, #22d3ee, transparent),
+        radial-gradient(2px 2px at 300px 20px, #ec4899, transparent);
+    background-size: 350px 100px;
+    animation: sparkle 8s linear infinite;
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+@keyframes sparkle {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-100px); }
+}
+
+/* Ticket Card Style */
+.ticket-card {
+    background: linear-gradient(145deg, rgba(26, 10, 46, 0.9) 0%, rgba(15, 22, 40, 0.9) 100%);
+    border: 2px solid rgba(251, 191, 36, 0.3);
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+}
+
+.ticket-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #fbbf24, #ec4899, #22d3ee, #fbbf24);
+    background-size: 200% 100%;
+    animation: gradient-shift 3s linear infinite;
+}
+
+@keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+}
+
+/* Marquee Light Effect */
+.marquee-border {
+    position: relative;
+    border: 3px solid transparent;
+    background: linear-gradient(var(--lunapark-purple), var(--lunapark-purple)) padding-box,
+                linear-gradient(90deg, #fbbf24, #ec4899, #d946ef, #22d3ee, #fbbf24) border-box;
+    background-size: 100% 100%, 300% 100%;
+    animation: marquee-glow 4s linear infinite;
+}
+
+@keyframes marquee-glow {
+    0% { background-position: 0% 0%, 0% 50%; }
+    100% { background-position: 0% 0%, 300% 50%; }
+}
+
+/* Button Styles */
+.btn-luna {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #0a0a1a;
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    padding: 12px 24px;
+    border-radius: 50px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+}
+
+.btn-luna:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(251, 191, 36, 0.6);
+}
+
+.btn-luna:active {
+    transform: translateY(0);
+}
+
+.btn-luna-pink {
+    background: linear-gradient(135deg, #ec4899 0%, #d946ef 100%);
+    color: white;
+}
+
+.btn-luna-pink:hover {
+    box-shadow: 0 6px 25px rgba(236, 72, 153, 0.6);
+}
+
+/* Use Now Button - Special */
+.btn-use-now {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: white;
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700;
+    font-size: 1.25rem;
+    padding: 16px 40px;
+    border-radius: 50px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.5),
+                inset 0 2px 10px rgba(255, 255, 255, 0.2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.btn-use-now:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 30px rgba(34, 197, 94, 0.7),
+                inset 0 2px 10px rgba(255, 255, 255, 0.3);
+}
+
+.btn-use-now:disabled {
+    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Coupon Used Success Animation */
+@keyframes success-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.coupon-success {
+    animation: success-pulse 0.5s ease-out;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(16, 163, 74, 0.2) 100%);
+    border-color: #22c55e !important;
+}
+
+/* Confetti Animation */
+@keyframes confetti-fall {
+    0% { transform: translateY(-100%) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+.confetti {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    top: -10px;
+    animation: confetti-fall 3s linear forwards;
+    z-index: 1000;
+}
+
+/* Search Input */
+.search-input {
+    background: rgba(26, 10, 46, 0.8);
+    border: 2px solid rgba(251, 191, 36, 0.3);
+    border-radius: 50px;
+    padding: 12px 20px 12px 48px;
+    color: #fef3c7;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #fbbf24;
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+}
+
+.search-input::placeholder {
+    color: rgba(254, 243, 199, 0.5);
+}
+
+/* Card Hover Effects */
+.luna-card {
+    transition: all 0.3s ease;
+}
+
+.luna-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(251, 191, 36, 0.2);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(26, 10, 46, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #fbbf24, #ec4899);
+    border-radius: 4px;
+}
+
+/* Navigation */
+.nav-link {
+    color: #fef3c7;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    font-family: 'Fredoka', sans-serif;
+}
+
+.nav-link:hover {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+}
+
+.nav-link.active {
+    background: rgba(251, 191, 36, 0.3);
+    color: #fbbf24;
+}
+
+/* Toast/Alert Styling */
+.toast-luna {
+    background: linear-gradient(145deg, rgba(26, 10, 46, 0.95) 0%, rgba(15, 22, 40, 0.95) 100%);
+    border: 2px solid rgba(251, 191, 36, 0.5);
+    border-radius: 12px;
+    color: #fef3c7;
+}
+
+/* Ad Placeholder */
+.ad-placeholder {
+    background: linear-gradient(135deg, rgba(26, 10, 46, 0.5) 0%, rgba(15, 22, 40, 0.5) 100%);
+    border: 2px dashed rgba(251, 191, 36, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    color: rgba(254, 243, 199, 0.5);
+    font-family: 'Fredoka', sans-serif;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+    .ticket-card {
+        border-radius: 12px;
     }
-    .dark {
-        --background: 0 0% 3.9%;
-        --foreground: 0 0% 98%;
-        --card: 0 0% 3.9%;
-        --card-foreground: 0 0% 98%;
-        --popover: 0 0% 3.9%;
-        --popover-foreground: 0 0% 98%;
-        --primary: 0 0% 98%;
-        --primary-foreground: 0 0% 9%;
-        --secondary: 0 0% 14.9%;
-        --secondary-foreground: 0 0% 98%;
-        --muted: 0 0% 14.9%;
-        --muted-foreground: 0 0% 63.9%;
-        --accent: 0 0% 14.9%;
-        --accent-foreground: 0 0% 98%;
-        --destructive: 0 62.8% 30.6%;
-        --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 14.9%;
-        --input: 0 0% 14.9%;
-        --ring: 0 0% 83.1%;
-        --chart-1: 220 70% 50%;
-        --chart-2: 160 60% 45%;
-        --chart-3: 30 80% 55%;
-        --chart-4: 280 65% 60%;
-        --chart-5: 340 75% 55%;
+    
+    .btn-use-now {
+        width: 100%;
+        padding: 14px 30px;
     }
+}
+
+/* Loading Spinner */
+.spinner-luna {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(251, 191, 36, 0.3);
+    border-top-color: #fbbf24;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
 @layer base {
@@ -78,38 +358,6 @@ code {
         @apply border-border;
     }
     body {
-        @apply bg-background text-foreground;
-    }
-}
-
-@layer base {
-    [data-debug-wrapper="true"] {
-        display: contents !important;
-    }
-
-    [data-debug-wrapper="true"] > * {
-        margin-left: inherit;
-        margin-right: inherit;
-        margin-top: inherit;
-        margin-bottom: inherit;
-        padding-left: inherit;
-        padding-right: inherit;
-        padding-top: inherit;
-        padding-bottom: inherit;
-        column-gap: inherit;
-        row-gap: inherit;
-        gap: inherit;
-        border-left-width: inherit;
-        border-right-width: inherit;
-        border-top-width: inherit;
-        border-bottom-width: inherit;
-        border-left-style: inherit;
-        border-right-style: inherit;
-        border-top-style: inherit;
-        border-bottom-style: inherit;
-        border-left-color: inherit;
-        border-right-color: inherit;
-        border-top-color: inherit;
-        border-bottom-color: inherit;
+        @apply text-foreground;
     }
 }
