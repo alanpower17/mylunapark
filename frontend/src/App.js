@@ -1507,6 +1507,7 @@ const RidesManager = ({ parkId, rides, onUpdate, auth }) => {
   const [editingRide, setEditingRide] = useState(null);
   const [formData, setFormData] = useState({ name: '', number: '', description: '', owner_surname: '' });
   const [saving, setSaving] = useState(false);
+  const [deleteModal, setDeleteModal] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -1529,12 +1530,13 @@ const RidesManager = ({ parkId, rides, onUpdate, auth }) => {
   };
 
   const handleDelete = async (rideId) => {
-    if (!window.confirm('Sei sicuro di voler eliminare questa giostra?')) return;
     try {
       await axios.delete(`${API}/rides/${rideId}`, { headers: auth.getAuthHeaders() });
+      setDeleteModal(null);
       onUpdate();
     } catch (error) {
       console.error('Error deleting ride:', error);
+      alert('Errore durante l\'eliminazione della giostra');
     }
   };
 
@@ -1619,12 +1621,42 @@ const RidesManager = ({ parkId, rides, onUpdate, auth }) => {
                 <button onClick={() => startEdit(ride)} className="text-amber-400 hover:text-amber-300 p-1" data-testid={`edit-ride-${ride.id}`}>
                   <Edit className="w-4 h-4" />
                 </button>
-                <button onClick={() => handleDelete(ride.id)} className="text-red-400 hover:text-red-300 p-1" data-testid={`delete-ride-${ride.id}`}>
+                <button onClick={() => setDeleteModal(ride)} className="text-red-400 hover:text-red-300 p-1" data-testid={`delete-ride-${ride.id}`}>
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="ticket-card max-w-md w-full p-6">
+            <h3 className="text-xl font-bold text-amber-400 mb-4">Conferma eliminazione</h3>
+            <p className="text-amber-100/80 mb-6">
+              Sei sicuro di voler eliminare la giostra <span className="text-amber-300 font-bold">{deleteModal.name}</span>?
+              <br /><br />
+              <span className="text-pink-400 text-sm">Attenzione: verranno eliminati anche tutti i coupon associati.</span>
+            </p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setDeleteModal(null)}
+                className="btn-luna flex-1"
+                data-testid="cancel-delete-ride-btn"
+              >
+                Annulla
+              </button>
+              <button 
+                onClick={() => handleDelete(deleteModal.id)}
+                className="btn-luna-pink flex-1"
+                data-testid="confirm-delete-ride-btn"
+              >
+                Elimina
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -1637,6 +1669,7 @@ const CouponsManager = ({ parkId, rides, coupons, onUpdate, auth }) => {
   const [editingCoupon, setEditingCoupon] = useState(null);
   const [formData, setFormData] = useState({ ride_id: '', discount_description: '', is_active: true });
   const [saving, setSaving] = useState(false);
+  const [deleteModal, setDeleteModal] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -1659,12 +1692,13 @@ const CouponsManager = ({ parkId, rides, coupons, onUpdate, auth }) => {
   };
 
   const handleDelete = async (couponId) => {
-    if (!window.confirm('Sei sicuro di voler eliminare questo coupon?')) return;
     try {
       await axios.delete(`${API}/coupons/${couponId}`, { headers: auth.getAuthHeaders() });
+      setDeleteModal(null);
       onUpdate();
     } catch (error) {
       console.error('Error deleting coupon:', error);
+      alert('Errore durante l\'eliminazione del coupon');
     }
   };
 
@@ -1762,12 +1796,40 @@ const CouponsManager = ({ parkId, rides, coupons, onUpdate, auth }) => {
                 <button onClick={() => startEdit(coupon)} className="text-amber-400 hover:text-amber-300 p-1" data-testid={`edit-coupon-${coupon.id}`}>
                   <Edit className="w-4 h-4" />
                 </button>
-                <button onClick={() => handleDelete(coupon.id)} className="text-red-400 hover:text-red-300 p-1" data-testid={`delete-coupon-${coupon.id}`}>
+                <button onClick={() => setDeleteModal(coupon)} className="text-red-400 hover:text-red-300 p-1" data-testid={`delete-coupon-${coupon.id}`}>
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="ticket-card max-w-md w-full p-6">
+            <h3 className="text-xl font-bold text-amber-400 mb-4">Conferma eliminazione</h3>
+            <p className="text-amber-100/80 mb-6">
+              Sei sicuro di voler eliminare il coupon per <span className="text-amber-300 font-bold">{deleteModal.ride_name}</span>?
+            </p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setDeleteModal(null)}
+                className="btn-luna flex-1"
+                data-testid="cancel-delete-btn"
+              >
+                Annulla
+              </button>
+              <button 
+                onClick={() => handleDelete(deleteModal.id)}
+                className="btn-luna-pink flex-1"
+                data-testid="confirm-delete-btn"
+              >
+                Elimina
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
