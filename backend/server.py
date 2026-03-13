@@ -71,7 +71,7 @@ class UserResponse(BaseModel):
 # Luna Park Models
 class LunaParkCreate(BaseModel):
     name: str
-    description: str
+    description: Optional[str] = None  # Descrizione opzionale
     address: str
     city: str
     region: str
@@ -80,13 +80,15 @@ class LunaParkCreate(BaseModel):
     phone: Optional[str] = None
     email: Optional[EmailStr] = None
     opening_hours: Optional[str] = None
+    opening_date: Optional[str] = None  # Data apertura (es: "20 Aprile 2024")
+    closing_date: Optional[str] = None  # Data chiusura (es: "1 Settembre 2024")
     coupon_cooldown_hours: int = 24  # Ore di attesa tra un uso e l'altro
 
 class LunaPark(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
-    description: str
+    description: Optional[str] = None
     address: str
     city: str
     region: str
@@ -95,33 +97,34 @@ class LunaPark(BaseModel):
     phone: Optional[str] = None
     email: Optional[EmailStr] = None
     opening_hours: Optional[str] = None
+    opening_date: Optional[str] = None
+    closing_date: Optional[str] = None
     coupon_cooldown_hours: int = 24
     organizer_id: str
-    status: str = "pending"  # pending, approved, rejected
+    status: str = "pending"  # pending, approved, rejected, archived
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     image_url: Optional[str] = None
 
 # Giostra (Ride) Models
 class RideCreate(BaseModel):
     name: str
-    number: str
+    number: Optional[str] = None  # Numero opzionale
     description: Optional[str] = None
-    owner_surname: str  # Cognome titolare
+    owner_surname: Optional[str] = None  # Cognome titolare opzionale
 
 class Ride(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     luna_park_id: str
     name: str
-    number: str
+    number: Optional[str] = None
     description: Optional[str] = None
-    owner_surname: str
+    owner_surname: Optional[str] = None
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 # Coupon Models
 class CouponCreate(BaseModel):
     ride_id: str
-    discount_amount: float  # Es: 1.00 euro
     discount_description: str  # Es: "1€ di sconto"
     valid_from: Optional[str] = None  # ISO date
     valid_until: Optional[str] = None  # ISO date
@@ -136,9 +139,8 @@ class Coupon(BaseModel):
     luna_park_id: str
     ride_id: str
     ride_name: str
-    ride_number: str
-    owner_surname: str
-    discount_amount: float
+    ride_number: Optional[str] = None
+    owner_surname: Optional[str] = None
     discount_description: str
     valid_from: Optional[str] = None
     valid_until: Optional[str] = None
@@ -312,6 +314,30 @@ async def get_organizer_luna_parks(user: dict = Depends(require_organizer)):
     parks = await db.luna_parks.find(query, {"_id": 0}).to_list(100)
     return parks
 
+@api_router.put("/lunaparks/{park_id}/archive")
+async def archive_luna_park(park_id: str, user: dict = Depends(require_organizer)):
+    """Archivia un luna park (non visibile agli utenti)"""
+    park = await db.luna_parks.find_one({"id": park_id}, {"_id": 0})
+    if not park:
+        raise HTTPException(status_code=404, detail="Luna Park non trovato")
+    if park["organizer_id"] != user["id"] and user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Non autorizzato")
+    
+    await db.luna_parks.update_one({"id": park_id}, {"$set": {"status": "archived"}})
+    return {"message": "Luna Park archiviato"}
+
+@api_router.put("/lunaparks/{park_id}/restore")
+async def restore_luna_park(park_id: str, user: dict = Depends(require_organizer)):
+    """Ripristina un luna park archiviato"""
+    park = await db.luna_parks.find_one({"id": park_id}, {"_id": 0})
+    if not park:
+        raise HTTPException(status_code=404, detail="Luna Park non trovato")
+    if park["organizer_id"] != user["id"] and user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Non autorizzato")
+    
+    await db.luna_parks.update_one({"id": park_id}, {"$set": {"status": "approved"}})
+    return {"message": "Luna Park ripristinato"}
+
 # ==================== ADMIN ROUTES ====================
 
 @api_router.get("/admin/lunaparks/pending", response_model=List[LunaPark])
@@ -426,8 +452,8 @@ async def create_coupon(park_id: str, data: CouponCreate, user: dict = Depends(r
         **data.model_dump(),
         luna_park_id=park_id,
         ride_name=ride["name"],
-        ride_number=ride["number"],
-        owner_surname=ride["owner_surname"]
+        ride_number=ride.get("number"),
+        owner_surname=ride.get("owner_surname")
     )
     await db.coupons.insert_one(coupon.model_dump())
     return coupon
@@ -448,8 +474,8 @@ async def update_coupon(coupon_id: str, data: CouponCreate, user: dict = Depends
     
     update_data = data.model_dump()
     update_data["ride_name"] = ride["name"]
-    update_data["ride_number"] = ride["number"]
-    update_data["owner_surname"] = ride["owner_surname"]
+    update_data["ride_number"] = ride.get("number")
+    update_data["owner_surname"] = ride.get("owner_surname")
     
     await db.coupons.update_one({"id": coupon_id}, {"$set": update_data})
     updated = await db.coupons.find_one({"id": coupon_id}, {"_id": 0})

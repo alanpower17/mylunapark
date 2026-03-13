@@ -1181,11 +1181,14 @@ const ParkManagementPage = () => {
     region: '',
     phone: '',
     opening_hours: '',
+    opening_date: '',
+    closing_date: '',
     coupon_cooldown_hours: 24,
     image_url: ''
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [showArchiveModal, setShowArchiveModal] = useState(false);
   const auth = useAuth();
   const navigate = useNavigate();
 
@@ -1316,14 +1319,39 @@ const ParkManagementPage = () => {
             </div>
 
             <div>
-              <label className="block text-amber-200 text-sm mb-2">Descrizione *</label>
+              <label className="block text-amber-200 text-sm mb-2">Descrizione (opzionale)</label>
               <textarea
-                value={formData.description}
+                value={formData.description || ''}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="search-input rounded-xl h-24 resize-none"
-                required
+                placeholder="Descrivi il tuo luna park..."
                 data-testid="park-description-input"
               />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-amber-200 text-sm mb-2">Data apertura</label>
+                <input
+                  type="text"
+                  value={formData.opening_date || ''}
+                  onChange={(e) => setFormData({ ...formData, opening_date: e.target.value })}
+                  className="search-input rounded-xl"
+                  placeholder="es: 20 Aprile 2024"
+                  data-testid="park-opening-date-input"
+                />
+              </div>
+              <div>
+                <label className="block text-amber-200 text-sm mb-2">Data chiusura</label>
+                <input
+                  type="text"
+                  value={formData.closing_date || ''}
+                  onChange={(e) => setFormData({ ...formData, closing_date: e.target.value })}
+                  className="search-input rounded-xl"
+                  placeholder="es: 1 Settembre 2024"
+                  data-testid="park-closing-date-input"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1386,10 +1414,74 @@ const ParkManagementPage = () => {
               </div>
             </div>
 
-            <button type="submit" disabled={saving} className="btn-luna" data-testid="save-park-btn">
-              {saving ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : (isNew ? 'Crea Luna Park' : 'Salva modifiche')}
-            </button>
+            <div className="flex gap-3">
+              <button type="submit" disabled={saving} className="btn-luna flex-1" data-testid="save-park-btn">
+                {saving ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : (isNew ? 'Crea Luna Park' : 'Salva modifiche')}
+              </button>
+              {!isNew && park?.status !== 'archived' && (
+                <button 
+                  type="button" 
+                  onClick={() => setShowArchiveModal(true)}
+                  className="btn-luna-pink"
+                  data-testid="archive-park-btn"
+                >
+                  Archivia
+                </button>
+              )}
+              {!isNew && park?.status === 'archived' && (
+                <button 
+                  type="button" 
+                  onClick={async () => {
+                    await axios.put(`${API}/lunaparks/${parkId}/restore`, {}, { headers: auth.getAuthHeaders() });
+                    fetchParkData();
+                  }}
+                  className="btn-luna"
+                  data-testid="restore-park-btn"
+                >
+                  Ripristina
+                </button>
+              )}
+            </div>
+            
+            {park?.status === 'archived' && (
+              <div className="bg-amber-500/20 border border-amber-500/30 rounded-lg p-3 text-amber-300 text-sm mt-4">
+                ⚠️ Questo luna park è archiviato e non è visibile agli utenti
+              </div>
+            )}
           </form>
+        )}
+
+        {/* Archive Confirmation Modal */}
+        {showArchiveModal && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="ticket-card max-w-md w-full p-6">
+              <h3 className="text-xl font-bold text-amber-400 mb-4">Conferma archiviazione</h3>
+              <p className="text-amber-100/80 mb-6">
+                Sei sicuro di voler archiviare <span className="text-amber-300 font-bold">{park?.name}</span>?
+                <br /><br />
+                Il luna park non sarà più visibile agli utenti ma potrai ripristinarlo in qualsiasi momento.
+              </p>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setShowArchiveModal(false)}
+                  className="btn-luna flex-1"
+                >
+                  Annulla
+                </button>
+                <button 
+                  onClick={async () => {
+                    await axios.put(`${API}/lunaparks/${parkId}/archive`, {}, { headers: auth.getAuthHeaders() });
+                    setShowArchiveModal(false);
+                    fetchParkData();
+                  }}
+                  className="btn-luna-pink flex-1"
+                  data-testid="confirm-archive-btn"
+                >
+                  Archivia
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Rides Tab */}
@@ -1456,35 +1548,42 @@ const RidesManager = ({ parkId, rides, onUpdate, auth }) => {
 
       {showForm && (
         <form onSubmit={handleSubmit} className="bg-amber-400/10 rounded-xl p-4 mb-4 space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-amber-200 text-xs mb-1">Nome giostra *</label>
             <input
               type="text"
-              placeholder="Nome giostra *"
+              placeholder="es: Montagne Russe"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className="search-input rounded-xl text-sm"
               required
               data-testid="ride-name-input"
             />
-            <input
-              type="text"
-              placeholder="Numero *"
-              value={formData.number}
-              onChange={(e) => setFormData({ ...formData, number: e.target.value })}
-              className="search-input rounded-xl text-sm"
-              required
-              data-testid="ride-number-input"
-            />
           </div>
-          <input
-            type="text"
-            placeholder="Cognome titolare *"
-            value={formData.owner_surname}
-            onChange={(e) => setFormData({ ...formData, owner_surname: e.target.value })}
-            className="search-input rounded-xl text-sm"
-            required
-            data-testid="ride-owner-input"
-          />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-amber-200 text-xs mb-1">Numero (opzionale)</label>
+              <input
+                type="text"
+                placeholder="es: 12"
+                value={formData.number || ''}
+                onChange={(e) => setFormData({ ...formData, number: e.target.value })}
+                className="search-input rounded-xl text-sm"
+                data-testid="ride-number-input"
+              />
+            </div>
+            <div>
+              <label className="block text-amber-200 text-xs mb-1">Cognome titolare (opzionale)</label>
+              <input
+                type="text"
+                placeholder="es: Rossi"
+                value={formData.owner_surname || ''}
+                onChange={(e) => setFormData({ ...formData, owner_surname: e.target.value })}
+                className="search-input rounded-xl text-sm"
+                data-testid="ride-owner-input"
+              />
+            </div>
+          </div>
           <div className="flex gap-2">
             <button type="button" onClick={() => setShowForm(false)} className="btn-luna-pink text-sm flex-1">Annulla</button>
             <button type="submit" disabled={saving} className="btn-luna text-sm flex-1" data-testid="save-ride-btn">
@@ -1501,8 +1600,13 @@ const RidesManager = ({ parkId, rides, onUpdate, auth }) => {
           {rides.map((ride) => (
             <div key={ride.id} className="bg-amber-400/5 rounded-xl p-3 flex items-center justify-between" data-testid={`ride-item-${ride.id}`}>
               <div>
-                <p className="text-amber-300 font-medium">{ride.name} <span className="text-amber-200/60">#{ride.number}</span></p>
-                <p className="text-amber-200/60 text-sm">Titolare: {ride.owner_surname}</p>
+                <p className="text-amber-300 font-medium">
+                  {ride.name} 
+                  {ride.number && <span className="text-amber-200/60"> #{ride.number}</span>}
+                </p>
+                {ride.owner_surname && (
+                  <p className="text-amber-200/60 text-sm">Titolare: {ride.owner_surname}</p>
+                )}
               </div>
               <div className="flex gap-2">
                 <button onClick={() => startEdit(ride)} className="text-amber-400 hover:text-amber-300 p-1" data-testid={`edit-ride-${ride.id}`}>
@@ -1524,7 +1628,7 @@ const RidesManager = ({ parkId, rides, onUpdate, auth }) => {
 const CouponsManager = ({ parkId, rides, coupons, onUpdate, auth }) => {
   const [showForm, setShowForm] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState(null);
-  const [formData, setFormData] = useState({ ride_id: '', discount_amount: 1, discount_description: '1€ di sconto', is_active: true });
+  const [formData, setFormData] = useState({ ride_id: '', discount_description: '', is_active: true });
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -1538,7 +1642,7 @@ const CouponsManager = ({ parkId, rides, coupons, onUpdate, auth }) => {
       }
       setShowForm(false);
       setEditingCoupon(null);
-      setFormData({ ride_id: '', discount_amount: 1, discount_description: '1€ di sconto', is_active: true });
+      setFormData({ ride_id: '', discount_description: '', is_active: true });
       onUpdate();
     } catch (error) {
       console.error('Error saving coupon:', error);
@@ -1638,9 +1742,14 @@ const CouponsManager = ({ parkId, rides, coupons, onUpdate, auth }) => {
           {coupons.map((coupon) => (
             <div key={coupon.id} className={`bg-amber-400/5 rounded-xl p-3 flex items-center justify-between ${!coupon.is_active ? 'opacity-50' : ''}`} data-testid={`coupon-item-${coupon.id}`}>
               <div>
-                <p className="text-amber-300 font-medium">{coupon.ride_name} <span className="text-amber-200/60">#{coupon.ride_number}</span></p>
-                <p className="text-green-400 font-bold">-{coupon.discount_description}</p>
-                <p className="text-amber-200/60 text-sm">Titolare: {coupon.owner_surname}</p>
+                <p className="text-amber-300 font-medium">
+                  {coupon.ride_name}
+                  {coupon.ride_number && <span className="text-amber-200/60"> #{coupon.ride_number}</span>}
+                </p>
+                <p className="text-green-400 font-bold">{coupon.discount_description}</p>
+                {coupon.owner_surname && (
+                  <p className="text-amber-200/60 text-sm">Titolare: {coupon.owner_surname}</p>
+                )}
               </div>
               <div className="flex gap-2">
                 <button onClick={() => startEdit(coupon)} className="text-amber-400 hover:text-amber-300 p-1" data-testid={`edit-coupon-${coupon.id}`}>
