@@ -1,0 +1,144 @@
+{
+  "identity": {
+    "name": "E1 - The Anti-AI Designer",
+    "tone": "Vibrant, Playful, Trustworthy, High-Energy",
+    "design_philosophy": [
+      "Fusion over Imitation: Carnival Aesthetics x Modern App Usability",
+      "Emotion First: Excitement (Red) + Trust (Blue) + Fun (Yellow)",
+      "Content is King: The Coupon is the Hero",
+      "Zoom In: Big, bold typography and large touch targets",
+      "Negative Space: Use whitespace to separate loud colors"
+    ]
+  },
+  "typography": {
+    "primary_font": "Fredoka",
+    "secondary_font": "Nunito",
+    "font_loading_instruction": "Add to index.html: <link href='https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&family=Nunito:wght@300;400;600;700;800&display=swap' rel='stylesheet'>",
+    "usage": {
+      "headings": "font-family: 'Fredoka', sans-serif; font-weight: 600;",
+      "body": "font-family: 'Nunito', sans-serif;",
+      "ui_elements": "font-family: 'Nunito', sans-serif; font-weight: 700;"
+    }
+  },
+  "colors": {
+    "light_theme": {
+      "background": "#FFF1F2",
+      "foreground": "#0F172A",
+      "primary": "#E11D48",
+      "primary_foreground": "#FFFFFF",
+      "secondary": "#F59E0B",
+      "secondary_foreground": "#0F172A",
+      "accent": "#0EA5E9",
+      "accent_foreground": "#FFFFFF",
+      "muted": "#F1F5F9",
+      "muted_foreground": "#64748B",
+      "card": "#FFFFFF",
+      "card_foreground": "#0F172A",
+      "border": "#FECDD3",
+      "input": "#E2E8F0",
+      "ring": "#E11D48"
+    },
+    "dark_theme": {
+      "background": "#0F172A",
+      "foreground": "#F8FAFC",
+      "primary": "#FB7185",
+      "primary_foreground": "#0F172A",
+      "secondary": "#FDE047",
+      "secondary_foreground": "#0F172A",
+      "accent": "#38BDF8",
+      "accent_foreground": "#0F172A",
+      "muted": "#1E293B",
+      "muted_foreground": "#94A3B8",
+      "card": "#1E293B",
+      "card_foreground": "#F8FAFC",
+      "border": "#334155",
+      "input": "#334155",
+      "ring": "#FB7185"
+    },
+    "special_colors": {
+      "success": "#10B981",
+      "warning": "#F59E0B",
+      "error": "#EF4444",
+      "ticket_stub": "#FCD34D"
+    }
+  },
+  "spacing": {
+    "container_padding": "p-4 md:p-8 lg:p-12",
+    "section_gap": "gap-8 md:gap-12",
+    "card_padding": "p-6"
+  },
+  "layout_strategies": {
+    "mobile_first": true,
+    "bento_grid": "grid grid-cols-1 md:grid-cols-3 gap-4",
+    "card_style": "rounded-2xl shadow-lg border-2 border-transparent hover:border-primary/20 transition-all duration-300",
+    "glass_effect": "bg-white/80 backdrop-blur-md border border-white/20 shadow-xl"
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 py-4 font-bold text-lg shadow-[0_4px_0_0_rgba(0,0,0,0.2)] active:shadow-none active:translate-y-[4px] transition-all",
+      "secondary": "bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-full px-6 py-3 font-semibold shadow-md",
+      "outline": "border-2 border-primary text-primary hover:bg-primary/10 rounded-full px-6 py-3 font-semibold"
+    },
+    "inputs": {
+      "default": "rounded-xl border-2 border-input focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all bg-background/50 h-12 px-4"
+    },
+    "cards": {
+      "coupon": "relative bg-white dark:bg-slate-800 rounded-2xl shadow-lg overflow-hidden border-2 border-dashed border-primary/30",
+      "ride": "rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group"
+    },
+    "navigation": {
+      "bottom_bar": "fixed bottom-4 left-4 right-4 bg-background/90 backdrop-blur-xl border border-border/50 rounded-full shadow-2xl flex justify-around items-center h-16 z-50",
+      "fab": "fixed bottom-24 right-6 bg-primary text-primary-foreground p-4 rounded-full shadow-xl hover:scale-110 transition-transform z-40"
+    }
+  },
+  "visual_enhancers": {
+    "textures": "bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5",
+    "gradients": {
+      "hero": "bg-gradient-to-br from-primary via-secondary to-accent",
+      "glass": "bg-gradient-to-b from-white/60 to-white/30"
+    },
+    "animations": {
+      "hover_lift": "hover:-translate-y-1 transition-transform duration-300",
+      "click_press": "active:scale-95 transition-transform duration-100",
+      "confetti": "Use 'canvas-confetti' for coupon redemption success"
+    }
+  },
+  "image_urls": {
+    "hero_backgrounds": [
+      "https://images.unsplash.com/photo-1763217892949-049c14acea02?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2OTV8MHwxfHNlYXJjaHw0fHxmdW5mYWlyJTIwY2Fybml2YWwlMjByaWRlcyUyMGNhcm91c2VsJTIwZmVycmlzJTIwd2hlZWx8ZW58MHx8fHwxNzczNDM2ODUzfDA&ixlib=rb-4.1.0&q=85",
+      "https://images.unsplash.com/photo-1765428114161-2ad4d993742b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2OTV8MHwxfHNlYXJjaHwzfHxmdW5mYWlyJTIwY2Fybml2YWwlMjByaWRlcyUyMGNhcm91c2VsJTIwZmVycmlzJTIwd2hlZWx8ZW58MHx8fHwxNzczNDM2ODUzfDA&ixlib=rb-4.1.0&q=85"
+    ],
+    "rides": [
+      "https://images.unsplash.com/photo-1761808993727-3e1902bb727d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2OTV8MHwxfHNlYXJjaHwxfHxmdW5mYWlyJTIwY2Fybml2YWwlMjByaWRlcyUyMGNhcm91c2VsJTIwZmVycmlzJTIwd2hlZWx8ZW58MHx8fHwxNzczNDM2ODUzfDA&ixlib=rb-4.1.0&q=85",
+      "https://images.unsplash.com/photo-1761754829202-f77be77d4de8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2OTV8MHwxfHNlYXJjaHwyfHxmdW5mYWlyJTIwY2Fybml2YWwlMjByaWRlcyUyMGNhcm91c2VsJTIwZmVycmlzJTIwd2hlZWx8ZW58MHx8fHwxNzczNDM2ODUzfDA&ixlib=rb-4.1.0&q=85"
+    ],
+    "families": [
+      "https://images.unsplash.com/photo-1769225957577-782cc8456cae?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzB8MHwxfHNlYXJjaHw0fHxoYXBweSUyMGZhbWlseSUyMGZ1bmZhaXIlMjBjb3R0b24lMjBjYW5keSUyMGxhdWdoaW5nfGVufDB8fHx8MTc3MzQzNjg2M3ww&ixlib=rb-4.1.0&q=85",
+      "https://images.unsplash.com/photo-1769674108231-c9819fd1d2f0?crop=entropy&cs=srgb\u0026fm=jpg\u0026ixid=M3w3NTY2NzB8MHwxfHNlYXJjaHwzfHxoYXBweSUyMGZhbWlseSUyMGZ1bmZhaXIlMjBjb3R0b24lMjBjYW5keSUyMGxhdWdoaW5nfGVufDB8fHx8MTc3MzQzNjg2M3ww\u0026ixlib=rb-4.1.0\u0026q=85"
+    ]
+  },
+  "libraries": {
+    "icons": "lucide-react",
+    "animations": "framer-motion",
+    "maps": "react-map-gl (if 3D maps needed) or simple Leaflet",
+    "confetti": "canvas-confetti",
+    "charts": "recharts",
+    "ui_primitives": "shadcn/ui"
+  },
+  "accessibility": {
+    "contrast_check": "Ensure text on primary buttons is white (#FFFFFF) or very dark (#0F172A) depending on bg lightness.",
+    "focus_states": "All interactive elements must have visible ring-2 ring-offset-2 on focus.",
+    "aria_labels": "All icon-only buttons (FABs) must have aria-label."
+  },
+  "universal_guidelines": [
+    "Do NOT use gradients for text legibility unless heavily contrasted.",
+    "Avoid 'Inter' font. Use 'Nunito' for body and 'Fredoka' for headings.",
+    "Buttons must feel 'clickable' with 3D shadow or scale effects.",
+    "Use skeleton loaders with 'shimmer' effect for data fetching.",
+    "Error states should be friendly (e.g., 'Whoops! No coupons here' vs '404 Not Found').",
+    "Every interaction needs a micro-animation (hover, tap, focus).",
+    "Client App: Light Mode Default (Sunshine/Fun). Organizer App: Dark Mode Default (Control/Focus).",
+    "Use 'sonner' for toast notifications."
+  ],
+  "instructions_to_main_agent": "1. Install fonts first. 2. Setup Tailwind colors. 3. Build 'CouponCard' and 'RideCard' components. 4. Implement 'Use Now' flow with confetti. 5. Create 'OrganizerDashboard' with bento grid. 6. Ensure mobile responsiveness is tested first."
+}
