@@ -101,3 +101,62 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "MyLunaPark - App per gestione coupon luna park con integrazione Google Forms/Sheets per automazione raccolta dati dai giostrai"
+
+backend:
+  - task: "Google Forms/Sheets Integration - Create Form and Sheet"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/google_integration.py, /app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Completata integrazione Google. Endpoint POST /api/lunaparks/{park_id}/create-google-form crea Google Form e Sheet, condivide permessi con service account e organizzatore. Necessario testare."
+  
+  - task: "Google Sheets Data Import"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Endpoint POST /api/lunaparks/{park_id}/import-from-google legge dati da Google Sheet e crea coupon/giostre. Necessario testare."
+
+frontend:
+  - task: "Google Integration UI - Dashboard Organizzatore"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Aggiunta sezione Google Integration nel ParkManagementPage con pulsanti: Crea Form, Copia Link, Apri Database, Importa Coupon. Necessario testare flusso completo."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: true
+
+test_plan:
+  current_focus:
+    - "Google Forms/Sheets Integration - Create Form and Sheet"
+    - "Google Sheets Data Import"
+    - "Google Integration UI - Dashboard Organizzatore"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "Completata implementazione integrazione Google Forms/Sheets. CRITICO: Service account condiviso con permessi writer sui fogli. Test con utente organizer@example.com per verificare: 1) Creazione form/sheet 2) Copia link 3) Apertura sheet 4) Importazione coupon da sheet popolato manualmente. Credenziali service account: /app/backend/google_credentials.json"

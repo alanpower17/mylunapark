@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, createContext, useContext } f
 import "@/App.css";
 import { BrowserRouter, Routes, Route, Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import axios from "axios";
-import { Search, MapPin, Ticket, Clock, ChevronRight, User, LogOut, Settings, Home, Star, Menu, X, Check, AlertCircle, Loader2, Aperture, Shield, Building2, Gift, Users, BarChart3, Plus, Edit, Trash2, Eye, EyeOff, Upload, Camera, Image, Calendar, Heart, Facebook, Instagram, Info, PartyPopper, ExternalLink, KeyRound } from "lucide-react";
+import { Search, MapPin, Ticket, Clock, ChevronRight, User, LogOut, Settings, Home, Star, Menu, X, Check, AlertCircle, Loader2, Aperture, Shield, Building2, Gift, Users, BarChart3, Plus, Edit, Trash2, Eye, EyeOff, Upload, Camera, Image, Calendar, Heart, Facebook, Instagram, Info, PartyPopper, ExternalLink, KeyRound, FileSpreadsheet, Copy, Download } from "lucide-react";
 
 // Use Aperture as FerrisWheel icon alternative
 const FerrisWheel = Aperture;
@@ -1427,6 +1427,9 @@ const ParkManagementPage = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [showArchiveModal, setShowArchiveModal] = useState(false);
+  const [googleIntegrationLoading, setGoogleIntegrationLoading] = useState(false);
+  const [googleIntegrationMessage, setGoogleIntegrationMessage] = useState('');
+  const [importingCoupons, setImportingCoupons] = useState(false);
   const auth = useAuth();
   const navigate = useNavigate();
 
@@ -1471,6 +1474,50 @@ const ParkManagementPage = () => {
       setError(err.response?.data?.detail || 'Errore durante il salvataggio');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleCreateGoogleForm = async () => {
+    setGoogleIntegrationLoading(true);
+    setGoogleIntegrationMessage('');
+    try {
+      const response = await axios.post(
+        `${API}/lunaparks/${parkId}/create-google-form`,
+        {},
+        { headers: auth.getAuthHeaders() }
+      );
+      setGoogleIntegrationMessage(response.data.message || 'Google Form e Sheet creati con successo!');
+      fetchParkData();
+    } catch (err) {
+      setGoogleIntegrationMessage(err.response?.data?.detail || 'Errore durante la creazione');
+    } finally {
+      setGoogleIntegrationLoading(false);
+    }
+  };
+
+  const handleCopyFormLink = () => {
+    if (park?.google_form_url) {
+      navigator.clipboard.writeText(park.google_form_url);
+      setGoogleIntegrationMessage('Link copiato negli appunti!');
+      setTimeout(() => setGoogleIntegrationMessage(''), 3000);
+    }
+  };
+
+  const handleImportCoupons = async () => {
+    setImportingCoupons(true);
+    setGoogleIntegrationMessage('');
+    try {
+      const response = await axios.post(
+        `${API}/lunaparks/${parkId}/import-from-google`,
+        {},
+        { headers: auth.getAuthHeaders() }
+      );
+      setGoogleIntegrationMessage(response.data.message || 'Coupon importati!');
+      fetchParkData();
+    } catch (err) {
+      setGoogleIntegrationMessage(err.response?.data?.detail || 'Errore durante l\'importazione');
+    } finally {
+      setImportingCoupons(false);
     }
   };
 
@@ -1709,6 +1756,90 @@ const ParkManagementPage = () => {
                 data-testid="park-events-input"
               />
             </div>
+
+            {/* Google Integration Section */}
+            {!isNew && (
+              <div className="border-t border-amber-400/20 pt-4 space-y-4">
+                <h3 className="text-lg font-bold text-amber-400 flex items-center gap-2">
+                  <FileSpreadsheet className="w-5 h-5" /> Integrazione Google Forms
+                </h3>
+                <p className="text-amber-100/70 text-sm">
+                  Genera un Google Form per raccogliere i coupon dai giostrai. I dati verranno salvati in un Google Sheet che potrai importare nell'app.
+                </p>
+                
+                {googleIntegrationMessage && (
+                  <div className={`${
+                    googleIntegrationMessage.includes('Errore') || googleIntegrationMessage.includes('Error') || googleIntegrationMessage.includes('APIError') || googleIntegrationMessage.includes('quota')
+                      ? 'bg-red-500/20 border-red-500/50 text-red-300' 
+                      : 'bg-green-500/20 border-green-500/50 text-green-300'
+                  } border rounded-lg p-3 text-sm`}>
+                    {googleIntegrationMessage}
+                  </div>
+                )}
+
+                {!park?.google_form_id ? (
+                  <button
+                    type="button"
+                    onClick={handleCreateGoogleForm}
+                    disabled={googleIntegrationLoading}
+                    className="btn-luna w-full"
+                    data-testid="create-google-form-btn"
+                  >
+                    {googleIntegrationLoading ? (
+                      <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                    ) : (
+                      <>
+                        <FileSpreadsheet className="w-5 h-5 mr-2" />
+                        Crea Google Form e Foglio
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={handleCopyFormLink}
+                        className="btn-luna"
+                        data-testid="copy-form-link-btn"
+                      >
+                        <Copy className="w-4 h-4 mr-2" />
+                        Copia Link Modulo
+                      </button>
+                      <a
+                        href={park.google_sheet_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-luna flex items-center justify-center"
+                        data-testid="open-sheet-btn"
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Apri Database
+                      </a>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleImportCoupons}
+                      disabled={importingCoupons}
+                      className="btn-luna-pink w-full"
+                      data-testid="import-coupons-btn"
+                    >
+                      {importingCoupons ? (
+                        <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                      ) : (
+                        <>
+                          <Download className="w-5 h-5 mr-2" />
+                          Importa Coupon da Google Sheet
+                        </>
+                      )}
+                    </button>
+                    <p className="text-amber-100/60 text-xs">
+                      💡 Condividi il link del modulo con i giostrai, poi clicca "Importa" per sincronizzare i dati.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Validità Coupon */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

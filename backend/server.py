@@ -14,6 +14,9 @@ import jwt
 import bcrypt
 import base64
 
+# Google Integration
+from google_integration import create_form_and_sheet_for_park, get_sheet_data, add_row_to_sheet
+
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
@@ -115,7 +118,7 @@ class LunaPark(BaseModel):
     status: str = "pending"
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     image_url: Optional[str] = None
-    # Nuovi campi
+    # Social & Info
     facebook_url: Optional[str] = None
     instagram_url: Optional[str] = None
     about_us: Optional[str] = None
@@ -123,6 +126,11 @@ class LunaPark(BaseModel):
     valid_days: Optional[List[str]] = None
     valid_hours_start: Optional[str] = None
     valid_hours_end: Optional[str] = None
+    # Google Integration
+    google_form_id: Optional[str] = None
+    google_form_url: Optional[str] = None
+    google_sheet_id: Optional[str] = None
+    google_sheet_url: Optional[str] = None
 
 # Giostra (Ride) Models
 class RideCreate(BaseModel):
@@ -410,6 +418,139 @@ async def restore_luna_park(park_id: str, user: dict = Depends(require_organizer
     
     await db.luna_parks.update_one({"id": park_id}, {"$set": {"status": "approved"}})
     return {"message": "Luna Park ripristinato"}
+
+# ==================== GOOGLE INTEGRATION ROUTES ====================
+
+@api_router.post("/lunaparks/{park_id}/create-google-form")
+async def create_google_form_for_park(park_id: str, user: dict = Depends(require_organizer)):
+    """Crea Google Form e Sheet per un Luna Park"""
+    park = await db.luna_parks.find_one({"id": park_id}, {"_id": 0})
+    if not park:
+        raise HTTPException(status_code=404, detail="Luna Park non trovato")
+    if park["organizer_id"] != user["id"] and user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Non autorizzato")
+    
+    # Check if already has Google integration
+    if park.get("google_form_id"):
+        return {
+            "message": "Google Form già esistente",
+            "form_url": park.get("google_form_url"),
+            "sheet_url": park.get("google_sheet_url")
+        }
+    
+    # Create Form and Sheet (pass organizer email for sharing)
+    result = create_form_and_sheet_for_park(park["name"], park["city"], user.get("email"))
+    
+    if "error" in result:
+        raise HTTPException(status_code=500, detail=result["error"])
+    
+    # Update park with Google info
+    await db.luna_parks.update_one(
+        {"id": park_id},
+        {"$set": {
+            "google_form_id": result.get("form_id"),
+            "google_form_url": result.get("form_url"),
+            "google_sheet_id": result.get("sheet_id"),
+            "google_sheet_url": result.get("sheet_url")
+        }}
+    )
+    
+    return {
+        "success": True,
+        "message": "Google Form e Sheet creati con successo",
+        "form_url": result.get("form_url"),
+        "form_edit_url": result.get("form_edit_url"),
+        "sheet_url": result.get("sheet_url")
+    }
+
+@api_router.get("/lunaparks/{park_id}/google-data")
+async def get_google_sheet_data(park_id: str, user: dict = Depends(require_organizer)):
+    """Ottieni i dati dal Google Sheet"""
+    park = await db.luna_parks.find_one({"id": park_id}, {"_id": 0})
+    if not park:
+        raise HTTPException(status_code=404, detail="Luna Park non trovato")
+    if park["organizer_id"] != user["id"] and user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Non autorizzato")
+    
+    if not park.get("google_sheet_id"):
+        raise HTTPException(status_code=400, detail="Nessun Google Sheet collegato")
+    
+    result = get_sheet_data(park["google_sheet_id"])
+    
+    if "error" in result:
+        raise HTTPException(status_code=500, detail=result["error"])
+    
+    return result
+
+@api_router.post("/lunaparks/{park_id}/import-from-google")
+async def import_coupons_from_google(park_id: str, user: dict = Depends(require_organizer)):
+    """Importa i coupon dal Google Sheet"""
+    park = await db.luna_parks.find_one({"id": park_id}, {"_id": 0})
+    if not park:
+        raise HTTPException(status_code=404, detail="Luna Park non trovato")
+    if park["organizer_id"] != user["id"] and user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Non autorizzato")
+    
+    if not park.get("google_sheet_id"):
+        raise HTTPException(status_code=400, detail="Nessun Google Sheet collegato")
+    
+    # Get data from sheet
+    result = get_sheet_data(park["google_sheet_id"])
+    
+    if "error" in result:
+        raise HTTPException(status_code=500, detail=result["error"])
+    
+    imported_count = 0
+    
+    for row in result.get("data", []):
+        # Skip already imported rows
+        if row.get("Importato") == "Sì":
+            continue
+        
+        nome_giostra = row.get("Nome Giostra", "").strip()
+        sconto = row.get("Sconto", "").strip()
+        
+        if not nome_giostra or not sconto:
+            continue
+        
+        # Check if ride exists, create if not
+        ride = await db.rides.find_one({
+            "luna_park_id": park_id,
+            "name": nome_giostra
+        }, {"_id": 0})
+        
+        if not ride:
+            # Create the ride
+            ride = {
+                "id": str(uuid.uuid4()),
+                "luna_park_id": park_id,
+                "name": nome_giostra,
+                "number": row.get("Numero Giostra", "").strip() or None,
+                "owner_surname": row.get("Cognome Titolare", "").strip() or None,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.rides.insert_one(ride)
+        
+        # Create the coupon
+        coupon = {
+            "id": str(uuid.uuid4()),
+            "luna_park_id": park_id,
+            "ride_id": ride["id"],
+            "ride_name": nome_giostra,
+            "ride_number": row.get("Numero Giostra", "").strip() or None,
+            "owner_surname": row.get("Cognome Titolare", "").strip() or None,
+            "discount_description": sconto,
+            "is_active": True,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.coupons.insert_one(coupon)
+        imported_count += 1
+    
+    return {
+        "success": True,
+        "message": f"Importati {imported_count} coupon",
+        "imported_count": imported_count
+    }
 
 # ==================== ADMIN ROUTES ====================
 
