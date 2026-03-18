@@ -177,17 +177,44 @@ const HomePage = () => {
   };
 
   const fetchParks = async (searchQuery = '') => {
-    try {
-      setLoading(true);
-      const params = searchQuery ? { search: searchQuery } : {};
-      const response = await axios.get(`${API}/lunaparks`, { params });
-      setParks(response.data);
-    } catch (error) {
-      console.error('Error fetching parks:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    setLoading(true);
+    // DATI FINTI PER FAR FUNZIONARE L'APP SU GITHUB PAGES
+    const mockParks = [
+      {
+        id: 1,
+        name: "Luna Park Genova",
+        city: "Genova",
+        region: "Liguria",
+        image_url: "https://images.unsplash.com/photo-1513889961551-628c1e5e2ee9",
+        description: "Il luna park mobile più grande d'Europa.",
+        latitude: 44.4056,
+        longitude: 8.9463
+      },
+      {
+        id: 2,
+        name: "Luna Park Milano",
+        city: "Milano",
+        region: "Lombardia",
+        image_url: "https://images.unsplash.com/photo-1533031024628-868ee3a40498",
+        description: "Divertimento nel cuore della città.",
+        latitude: 45.4642,
+        longitude: 9.1900
+      }
+    ];
+
+    // Filtro semplice
+    const filtered = searchQuery 
+      ? mockParks.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.city.toLowerCase().includes(searchQuery.toLowerCase()))
+      : mockParks;
+
+    setParks(filtered);
+  } catch (error) {
+    console.error('Error fetching parks:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleSearch = useCallback((e) => {
     const value = e.target.value;
