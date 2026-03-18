@@ -143,7 +143,7 @@ const Header = ({ user, logout }) => {
           <div className="flex items-center justify-between">
             <Link to="/" className="flex items-center gap-3" data-testid="logo-link">
               <img src="/logo.png" alt="MyLunaPark" className="w-10 h-10 rounded-lg" />
-              <span className="font-bold text-xl text-cyan-400 hidden sm:block" style={{ textShadow: '0 0 10px rgba(34, 211, 238, 0.3)' }}>
+              <span className="font-bold text-xl metallic-text hidden sm:block">
                 MyLunaPark
               </span>
             </Link>
@@ -320,7 +320,7 @@ const HomePage = () => {
       <section className="relative py-12 md:py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <img src="/logo.png" alt="MyLunaPark" className="w-24 h-24 mx-auto mb-6 rounded-2xl" />
-          <h1 className="text-4xl md:text-6xl font-bold text-cyan-400 mb-4" style={{ textShadow: '0 0 20px rgba(34, 211, 238, 0.3)' }} data-testid="hero-title">
+          <h1 className="text-4xl md:text-6xl font-bold mb-4 metallic-text" data-testid="hero-title">
             MyLunaPark
           </h1>
           <p className="text-lg md:text-xl text-amber-100/80 mb-8">
@@ -1976,11 +1976,117 @@ const RidesManager = ({ parkId, rides, onUpdate, auth }) => {
   );
 };
 
+// Coupon Image Uploader Component
+const CouponImageUploader = ({ currentImage, onImageChange, auth }) => {
+  const [uploading, setUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(currentImage);
+  const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    setPreviewUrl(currentImage);
+  }, [currentImage]);
+
+  const handleFileSelect = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Tipo file non supportato. Usa JPG, PNG, WebP o GIF.');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File troppo grande. Massimo 5MB.');
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await axios.post(`${API}/upload/image`, formData, {
+        headers: {
+          ...auth.getAuthHeaders(),
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data.success) {
+        setPreviewUrl(response.data.image_url);
+        onImageChange(response.data.image_url);
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Errore durante il caricamento dell\'immagine');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemove = () => {
+    setPreviewUrl('');
+    onImageChange('');
+  };
+
+  return (
+    <div>
+      {previewUrl ? (
+        <div className="relative">
+          <img src={previewUrl} alt="Preview" className="w-full h-32 object-cover rounded-xl" />
+          <div className="absolute top-2 right-2 flex gap-1">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="bg-amber-500 text-black p-1.5 rounded-lg hover:bg-amber-400"
+              disabled={uploading}
+            >
+              <Camera className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={handleRemove}
+              className="bg-red-500 text-white p-1.5 rounded-lg hover:bg-red-400"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="w-full h-24 border-2 border-dashed border-amber-400/30 rounded-xl flex flex-col items-center justify-center text-amber-400/60 hover:text-amber-400 hover:border-amber-400/50 transition-colors"
+          disabled={uploading}
+        >
+          {uploading ? (
+            <Loader2 className="w-6 h-6 animate-spin" />
+          ) : (
+            <>
+              <Upload className="w-6 h-6 mb-1" />
+              <span className="text-xs">Carica foto</span>
+            </>
+          )}
+        </button>
+      )}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
+    </div>
+  );
+};
+
 // Coupons Manager Component
 const CouponsManager = ({ parkId, rides, coupons, onUpdate, auth }) => {
   const [showForm, setShowForm] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState(null);
-  const [formData, setFormData] = useState({ ride_id: '', discount_description: '', is_active: true });
+  const [formData, setFormData] = useState({ ride_id: '', discount_description: '', image_url: '', link_url: '', is_active: true });
   const [saving, setSaving] = useState(false);
   const [deleteModal, setDeleteModal] = useState(null);
 
@@ -1995,7 +2101,7 @@ const CouponsManager = ({ parkId, rides, coupons, onUpdate, auth }) => {
       }
       setShowForm(false);
       setEditingCoupon(null);
-      setFormData({ ride_id: '', discount_description: '', is_active: true });
+      setFormData({ ride_id: '', discount_description: '', image_url: '', link_url: '', is_active: true });
       onUpdate();
     } catch (error) {
       console.error('Error saving coupon:', error);
@@ -2026,7 +2132,7 @@ const CouponsManager = ({ parkId, rides, coupons, onUpdate, auth }) => {
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-bold text-amber-400">Coupon ({coupons.length})</h3>
         <button 
-          onClick={() => { setShowForm(true); setEditingCoupon(null); setFormData({ ride_id: '', discount_description: '', is_active: true }); }} 
+          onClick={() => { setShowForm(true); setEditingCoupon(null); setFormData({ ride_id: '', discount_description: '', image_url: '', link_url: '', is_active: true }); }} 
           className="btn-luna text-sm"
           disabled={rides.length === 0}
           data-testid="add-coupon-btn"
@@ -2070,6 +2176,34 @@ const CouponsManager = ({ parkId, rides, coupons, onUpdate, auth }) => {
               data-testid="coupon-description-input"
             />
           </div>
+          
+          {/* Foto Coupon */}
+          <div>
+            <label className="block text-amber-200 text-xs mb-1 flex items-center gap-1">
+              <Camera className="w-3 h-3" /> Foto Coupon (opzionale)
+            </label>
+            <CouponImageUploader 
+              currentImage={formData.image_url} 
+              onImageChange={(url) => setFormData({ ...formData, image_url: url })}
+              auth={auth}
+            />
+          </div>
+
+          {/* Link Foto */}
+          <div>
+            <label className="block text-amber-200 text-xs mb-1 flex items-center gap-1">
+              <ExternalLink className="w-3 h-3" /> Link (quando si clicca la foto)
+            </label>
+            <input
+              type="url"
+              placeholder="https://esempio.com"
+              value={formData.link_url || ''}
+              onChange={(e) => setFormData({ ...formData, link_url: e.target.value })}
+              className="search-input rounded-xl text-sm"
+              data-testid="coupon-link-input"
+            />
+          </div>
+
           <label className="flex items-center gap-2 text-amber-200">
             <input
               type="checkbox"
