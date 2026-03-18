@@ -1,101 +1,14 @@
-import { useState, useEffect, useCallback, useRef, createContext, useContext } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import axios from "axios";
 import { Search, MapPin, Ticket, Clock, ChevronRight, User, LogOut, Settings, Home, Star, Menu, X, Check, AlertCircle, Loader2, Aperture, Shield, Building2, Gift, Users, BarChart3, Plus, Edit, Trash2, Eye, EyeOff, Upload, Camera, Image, Calendar, Heart, Facebook, Instagram, Info, PartyPopper, ExternalLink, KeyRound, FileSpreadsheet, Copy, Download } from "lucide-react";
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { API } from './utils/constants';
+import { getDeviceId, calculateDistance } from './utils/utils';
 
 // Use Aperture as FerrisWheel icon alternative
 const FerrisWheel = Aperture;
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
-// Device ID for non-registered users
-const getDeviceId = () => {
-  let deviceId = localStorage.getItem('lunapark_device_id');
-  if (!deviceId) {
-    deviceId = 'device_' + Math.random().toString(36).substr(2, 9) + Date.now();
-    localStorage.setItem('lunapark_device_id', deviceId);
-  }
-  return deviceId;
-};
-
-// Auth Context - Real React Context for shared state
-const AuthContext = createContext(null);
-
-const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const token = localStorage.getItem('lunapark_token');
-    const userData = localStorage.getItem('lunapark_user');
-    if (token && userData) {
-      try {
-        setUser(JSON.parse(userData));
-      } catch (e) {
-        localStorage.removeItem('lunapark_token');
-        localStorage.removeItem('lunapark_user');
-      }
-    }
-    setLoading(false);
-  }, []);
-
-  const login = (userData, token) => {
-    localStorage.setItem('lunapark_token', token);
-    localStorage.setItem('lunapark_user', JSON.stringify(userData));
-    setUser(userData);
-  };
-
-  const logout = () => {
-    localStorage.removeItem('lunapark_token');
-    localStorage.removeItem('lunapark_user');
-    setUser(null);
-  };
-
-  const updateUser = (userData) => {
-    localStorage.setItem('lunapark_user', JSON.stringify(userData));
-    setUser(userData);
-  };
-
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('lunapark_token');
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  };
-
-  const toggleFavorite = async (parkId) => {
-    if (!user) return;
-    const favorites = user.favorite_parks || [];
-    const isFavorite = favorites.includes(parkId);
-    
-    try {
-      if (isFavorite) {
-        await axios.delete(`${API}/auth/favorites/${parkId}`, { headers: getAuthHeaders() });
-        const newFavorites = favorites.filter(id => id !== parkId);
-        updateUser({ ...user, favorite_parks: newFavorites });
-      } else {
-        await axios.post(`${API}/auth/favorites/${parkId}`, {}, { headers: getAuthHeaders() });
-        updateUser({ ...user, favorite_parks: [...favorites, parkId] });
-      }
-    } catch (error) {
-      console.error('Error toggling favorite:', error);
-    }
-  };
-
-  return (
-    <AuthContext.Provider value={{ user, loading, login, logout, getAuthHeaders, toggleFavorite, updateUser }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
 
 // Confetti Component
 const Confetti = ({ show }) => {
@@ -261,17 +174,6 @@ const HomePage = () => {
         (error) => console.log('Geolocation not available')
       );
     }
-  };
-
-  const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const R = 6371; // km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
   };
 
   const fetchParks = async (searchQuery = '') => {
