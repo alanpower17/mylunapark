@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import "@/App.css";
-import { BrowserRouter, Routes, Route, Link, useNavigate, useParams, useLocation } from "react-router-dom";
+import { HashRouter, Routes, Route, Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import axios from "axios";
 import { Search, MapPin, Ticket, Clock, ChevronRight, User, LogOut, Settings, Home, Star, Menu, X, Check, AlertCircle, Loader2, Aperture, Shield, Building2, Gift, Users, BarChart3, Plus, Edit, Trash2, Eye, EyeOff, Upload, Camera, Image, Calendar, Heart, Facebook, Instagram, Info, PartyPopper, ExternalLink, KeyRound, FileSpreadsheet, Copy, Download } from "lucide-react";
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -2524,7 +2524,7 @@ function AppContent() {
 
   return (
     <div className="App min-h-screen bg-[#0a0a1a]">
-      <BrowserRouter>
+      <HashRouter>
         <Header user={auth.user} logout={auth.logout} />
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -2536,7 +2536,7 @@ function AppContent() {
           <Route path="/dashboard/park/:parkId" element={<ParkManagementPage />} />
           <Route path="/admin" element={<AdminPage />} />
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
     </div>
   );
 }
