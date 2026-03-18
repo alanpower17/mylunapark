@@ -60,6 +60,7 @@ class User(BaseModel):
     name: str
     role: str = "cliente"
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    favorite_parks: List[str] = Field(default_factory=list)  # Lista ID luna park preferiti
 
 class UserResponse(BaseModel):
     id: str
@@ -67,11 +68,12 @@ class UserResponse(BaseModel):
     name: str
     role: str
     token: Optional[str] = None
+    favorite_parks: List[str] = Field(default_factory=list)
 
 # Luna Park Models
 class LunaParkCreate(BaseModel):
     name: str
-    description: Optional[str] = None  # Descrizione opzionale
+    description: Optional[str] = None
     address: str
     city: str
     region: str
@@ -80,9 +82,18 @@ class LunaParkCreate(BaseModel):
     phone: Optional[str] = None
     email: Optional[EmailStr] = None
     opening_hours: Optional[str] = None
-    opening_date: Optional[str] = None  # Data apertura (es: "20 Aprile 2024")
-    closing_date: Optional[str] = None  # Data chiusura (es: "1 Settembre 2024")
-    coupon_cooldown_hours: int = 24  # Ore di attesa tra un uso e l'altro
+    opening_date: Optional[str] = None
+    closing_date: Optional[str] = None
+    coupon_cooldown_hours: int = 24
+    # Nuovi campi
+    facebook_url: Optional[str] = None
+    instagram_url: Optional[str] = None
+    about_us: Optional[str] = None  # Chi Siamo
+    events: Optional[str] = None  # Eventi
+    # Validità coupon globale
+    valid_days: Optional[List[str]] = None  # Es: ["lunedi", "martedi"]
+    valid_hours_start: Optional[str] = None
+    valid_hours_end: Optional[str] = None
 
 class LunaPark(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -101,9 +112,17 @@ class LunaPark(BaseModel):
     closing_date: Optional[str] = None
     coupon_cooldown_hours: int = 24
     organizer_id: str
-    status: str = "pending"  # pending, approved, rejected, archived
+    status: str = "pending"
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     image_url: Optional[str] = None
+    # Nuovi campi
+    facebook_url: Optional[str] = None
+    instagram_url: Optional[str] = None
+    about_us: Optional[str] = None
+    events: Optional[str] = None
+    valid_days: Optional[List[str]] = None
+    valid_hours_start: Optional[str] = None
+    valid_hours_end: Optional[str] = None
 
 # Giostra (Ride) Models
 class RideCreate(BaseModel):
@@ -125,12 +144,14 @@ class Ride(BaseModel):
 # Coupon Models
 class CouponCreate(BaseModel):
     ride_id: str
-    discount_description: str  # Es: "1€ di sconto"
-    valid_from: Optional[str] = None  # ISO date
-    valid_until: Optional[str] = None  # ISO date
-    valid_days: Optional[List[str]] = None  # Es: ["lunedi", "martedi"]
-    valid_hours_start: Optional[str] = None  # Es: "18:00"
-    valid_hours_end: Optional[str] = None  # Es: "23:00"
+    discount_description: str
+    image_url: Optional[str] = None  # Foto coupon
+    link_url: Optional[str] = None  # Link quando si clicca la foto
+    valid_from: Optional[str] = None
+    valid_until: Optional[str] = None
+    valid_days: Optional[List[str]] = None
+    valid_hours_start: Optional[str] = None
+    valid_hours_end: Optional[str] = None
     is_active: bool = True
 
 class Coupon(BaseModel):
@@ -142,6 +163,8 @@ class Coupon(BaseModel):
     ride_number: Optional[str] = None
     owner_surname: Optional[str] = None
     discount_description: str
+    image_url: Optional[str] = None
+    link_url: Optional[str] = None
     valid_from: Optional[str] = None
     valid_until: Optional[str] = None
     valid_days: Optional[List[str]] = None
@@ -242,7 +265,8 @@ async def login(data: UserLogin):
         email=user["email"],
         name=user["name"],
         role=user["role"],
-        token=token
+        token=token,
+        favorite_parks=user.get("favorite_parks", [])
     )
 
 @api_router.get("/auth/me", response_model=UserResponse)
@@ -251,8 +275,57 @@ async def get_me(user: dict = Depends(require_auth)):
         id=user["id"],
         email=user["email"],
         name=user["name"],
-        role=user["role"]
+        role=user["role"],
+        favorite_parks=user.get("favorite_parks", [])
     )
+
+# Preferiti
+@api_router.post("/auth/favorites/{park_id}")
+async def add_favorite(park_id: str, user: dict = Depends(require_auth)):
+    """Aggiunge un luna park ai preferiti"""
+    favorites = user.get("favorite_parks", [])
+    if park_id not in favorites:
+        favorites.append(park_id)
+        await db.users.update_one({"id": user["id"]}, {"$set": {"favorite_parks": favorites}})
+    return {"message": "Aggiunto ai preferiti", "favorite_parks": favorites}
+
+@api_router.delete("/auth/favorites/{park_id}")
+async def remove_favorite(park_id: str, user: dict = Depends(require_auth)):
+    """Rimuove un luna park dai preferiti"""
+    favorites = user.get("favorite_parks", [])
+    if park_id in favorites:
+        favorites.remove(park_id)
+        await db.users.update_one({"id": user["id"]}, {"$set": {"favorite_parks": favorites}})
+    return {"message": "Rimosso dai preferiti", "favorite_parks": favorites}
+
+@api_router.get("/auth/favorites")
+async def get_favorites(user: dict = Depends(require_auth)):
+    """Ottieni lista preferiti"""
+    return {"favorite_parks": user.get("favorite_parks", [])}
+
+# Elimina Account
+@api_router.delete("/auth/account")
+async def delete_account(user: dict = Depends(require_auth)):
+    """Elimina l'account utente"""
+    await db.users.delete_one({"id": user["id"]})
+    # Elimina anche i luna park dell'utente se è organizzatore
+    if user["role"] == "organizzatore":
+        await db.luna_parks.delete_many({"organizer_id": user["id"]})
+    return {"message": "Account eliminato"}
+
+# Password dimenticata (placeholder - richiede servizio email)
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+@api_router.post("/auth/forgot-password")
+async def forgot_password(data: ForgotPasswordRequest):
+    """Richiede reset password"""
+    user = await db.users.find_one({"email": data.email})
+    if user:
+        # In produzione: inviare email con link reset
+        # Per ora: restituisce messaggio generico
+        pass
+    return {"message": "Se l'email esiste, riceverai le istruzioni per il reset"}
 
 # ==================== LUNA PARK ROUTES ====================
 

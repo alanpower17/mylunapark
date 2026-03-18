@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, createContext, useContext } f
 import "@/App.css";
 import { BrowserRouter, Routes, Route, Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import axios from "axios";
-import { Search, MapPin, Ticket, Clock, ChevronRight, User, LogOut, Settings, Home, Star, Menu, X, Check, AlertCircle, Loader2, Aperture, Shield, Building2, Gift, Users, BarChart3, Plus, Edit, Trash2, Eye, EyeOff, Upload, Camera, Image, Calendar } from "lucide-react";
+import { Search, MapPin, Ticket, Clock, ChevronRight, User, LogOut, Settings, Home, Star, Menu, X, Check, AlertCircle, Loader2, Aperture, Shield, Building2, Gift, Users, BarChart3, Plus, Edit, Trash2, Eye, EyeOff, Upload, Camera, Image, Calendar, Heart, Facebook, Instagram, Info, PartyPopper, ExternalLink, KeyRound } from "lucide-react";
 
 // Use Aperture as FerrisWheel icon alternative
 const FerrisWheel = Aperture;
@@ -53,13 +53,37 @@ const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const updateUser = (userData) => {
+    localStorage.setItem('lunapark_user', JSON.stringify(userData));
+    setUser(userData);
+  };
+
   const getAuthHeaders = () => {
     const token = localStorage.getItem('lunapark_token');
     return token ? { Authorization: `Bearer ${token}` } : {};
   };
 
+  const toggleFavorite = async (parkId) => {
+    if (!user) return;
+    const favorites = user.favorite_parks || [];
+    const isFavorite = favorites.includes(parkId);
+    
+    try {
+      if (isFavorite) {
+        await axios.delete(`${API}/auth/favorites/${parkId}`, { headers: getAuthHeaders() });
+        const newFavorites = favorites.filter(id => id !== parkId);
+        updateUser({ ...user, favorite_parks: newFavorites });
+      } else {
+        await axios.post(`${API}/auth/favorites/${parkId}`, {}, { headers: getAuthHeaders() });
+        updateUser({ ...user, favorite_parks: [...favorites, parkId] });
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, getAuthHeaders }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, getAuthHeaders, toggleFavorite, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
@@ -114,13 +138,13 @@ const Header = ({ user, logout }) => {
 
   return (
     <header className="sticky top-0 z-40 w-full">
-      <div className="bg-gradient-to-r from-[#1a0a2e]/95 via-[#0f1628]/95 to-[#1a0a2e]/95 backdrop-blur-md border-b border-amber-500/20">
+      <div className="bg-gradient-to-r from-[#1a0a2e]/95 via-[#0f1628]/95 to-[#1a0a2e]/95 backdrop-blur-md border-b border-cyan-500/20">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-2" data-testid="logo-link">
-              <FerrisWheel className="w-8 h-8 text-amber-400" />
-              <span className="font-bold text-xl text-amber-400 text-glow-gold hidden sm:block">
-                Luna Park Coupon
+            <Link to="/" className="flex items-center gap-3" data-testid="logo-link">
+              <img src="/logo.png" alt="MyLunaPark" className="w-10 h-10 rounded-lg" />
+              <span className="font-bold text-xl text-cyan-400 hidden sm:block" style={{ textShadow: '0 0 10px rgba(34, 211, 238, 0.3)' }}>
+                MyLunaPark
               </span>
             </Link>
 
@@ -139,6 +163,9 @@ const Header = ({ user, logout }) => {
                   <Shield className="w-4 h-4 inline mr-1" /> Admin
                 </Link>
               )}
+              <a href="https://sites.google.com/view/privacypolicymylunaparkappwebs/home-page" target="_blank" rel="noopener noreferrer" className="nav-link text-amber-200/60 hover:text-amber-200" data-testid="nav-privacy">
+                Privacy
+              </a>
               {user ? (
                 <div className="flex items-center gap-3">
                   <span className="text-amber-200 text-sm">{user.name}</span>
@@ -184,6 +211,9 @@ const Header = ({ user, logout }) => {
                   <Shield className="w-4 h-4 inline mr-2" /> Admin
                 </Link>
               )}
+              <a href="https://sites.google.com/view/privacypolicymylunaparkappwebs/home-page" target="_blank" rel="noopener noreferrer" className="nav-link text-amber-200/60" onClick={() => setMenuOpen(false)}>
+                Privacy Policy
+              </a>
               {user ? (
                 <button onClick={() => { logout(); setMenuOpen(false); }} className="nav-link text-left text-pink-400" data-testid="mobile-logout-btn">
                   <LogOut className="w-4 h-4 inline mr-2" /> Esci ({user.name})
@@ -211,10 +241,38 @@ const HomePage = () => {
   const [parks, setParks] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [userLocation, setUserLocation] = useState(null);
+  const auth = useAuth();
 
   useEffect(() => {
     fetchParks();
+    getUserLocation();
   }, []);
+
+  const getUserLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => console.log('Geolocation not available')
+      );
+    }
+  };
+
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371; // km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
 
   const fetchParks = async (searchQuery = '') => {
     try {
@@ -238,13 +296,32 @@ const HomePage = () => {
     return () => clearTimeout(timeout);
   }, []);
 
+  // Ordina: preferiti prima, poi per distanza
+  const sortedParks = [...parks].sort((a, b) => {
+    const favorites = auth.user?.favorite_parks || [];
+    const aFav = favorites.includes(a.id);
+    const bFav = favorites.includes(b.id);
+    
+    if (aFav && !bFav) return -1;
+    if (!aFav && bFav) return 1;
+    
+    // Se entrambi sono preferiti o nessuno, ordina per distanza
+    if (userLocation && a.latitude && b.latitude) {
+      const distA = calculateDistance(userLocation.lat, userLocation.lng, a.latitude, a.longitude);
+      const distB = calculateDistance(userLocation.lat, userLocation.lng, b.latitude, b.longitude);
+      return distA - distB;
+    }
+    return 0;
+  });
+
   return (
     <div className="min-h-screen starry-bg">
       {/* Hero Section */}
       <section className="relative py-12 md:py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-amber-400 text-glow-gold mb-4" data-testid="hero-title">
-            Risparmia al Luna Park!
+          <img src="/logo.png" alt="MyLunaPark" className="w-24 h-24 mx-auto mb-6 rounded-2xl" />
+          <h1 className="text-4xl md:text-6xl font-bold text-cyan-400 mb-4" style={{ textShadow: '0 0 20px rgba(34, 211, 238, 0.3)' }} data-testid="hero-title">
+            MyLunaPark
           </h1>
           <p className="text-lg md:text-xl text-amber-100/80 mb-8">
             Trova coupon e sconti per le giostre dei migliori luna park d'Italia
@@ -252,7 +329,7 @@ const HomePage = () => {
 
           {/* Search Bar */}
           <div className="relative max-w-xl mx-auto">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-amber-400/60" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400/60" />
             <input
               type="text"
               placeholder="Cerca luna park per nome o città..."
@@ -269,23 +346,24 @@ const HomePage = () => {
       <section className="px-4 pb-12">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-2xl font-bold text-amber-300 mb-6 flex items-center gap-2">
-            <FerrisWheel className="w-6 h-6" />
+            <Ticket className="w-6 h-6" />
             Luna Park disponibili
+            {userLocation && <span className="text-sm font-normal text-amber-200/60 ml-2">(ordinati per distanza)</span>}
           </h2>
 
           {loading ? (
             <div className="flex justify-center py-12">
               <div className="spinner-luna" data-testid="loading-spinner"></div>
             </div>
-          ) : parks.length === 0 ? (
+          ) : sortedParks.length === 0 ? (
             <div className="text-center py-12 text-amber-200/60" data-testid="no-parks-message">
               <FerrisWheel className="w-16 h-16 mx-auto mb-4 opacity-50" />
               <p>Nessun luna park trovato</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {parks.map((park) => (
-                <ParkCard key={park.id} park={park} />
+              {sortedParks.map((park) => (
+                <ParkCard key={park.id} park={park} userLocation={userLocation} />
               ))}
             </div>
           )}
@@ -305,19 +383,65 @@ const HomePage = () => {
 };
 
 // Park Card Component
-const ParkCard = ({ park }) => {
+const ParkCard = ({ park, userLocation }) => {
+  const auth = useAuth();
+  const isFavorite = auth.user?.favorite_parks?.includes(park.id);
+
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  const distance = userLocation && park.latitude 
+    ? calculateDistance(userLocation.lat, userLocation.lng, park.latitude, park.longitude)
+    : null;
+
+  const handleFavoriteClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (auth.user) {
+      auth.toggleFavorite(park.id);
+    }
+  };
+
   return (
-    <Link to={`/park/${park.id}`} className="block" data-testid={`park-card-${park.id}`}>
+    <Link to={`/park/${park.id}`} className="block relative" data-testid={`park-card-${park.id}`}>
+      {/* Cuore preferiti */}
+      {auth.user && (
+        <button
+          onClick={handleFavoriteClick}
+          className={`absolute top-3 right-3 z-10 p-2 rounded-full transition-all ${
+            isFavorite 
+              ? 'bg-pink-500 text-white' 
+              : 'bg-black/50 text-white/70 hover:text-pink-400'
+          }`}
+          data-testid={`favorite-btn-${park.id}`}
+        >
+          <Heart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
+        </button>
+      )}
+
       <div className="ticket-card luna-card overflow-hidden">
         <div className="h-40 bg-gradient-to-br from-purple-900/50 to-blue-900/50 relative">
           {park.image_url ? (
             <img src={park.image_url} alt={park.name} className="w-full h-full object-cover opacity-80" />
           ) : (
             <div className="flex items-center justify-center h-full">
-              <FerrisWheel className="w-16 h-16 text-amber-400/40" />
+              <Ticket className="w-16 h-16 text-amber-400/40" />
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-[#1a0a2e] to-transparent" />
+          {isFavorite && (
+            <div className="absolute top-3 left-3 bg-pink-500/90 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+              <Heart className="w-3 h-3 fill-current" /> Preferito
+            </div>
+          )}
         </div>
         <div className="p-4">
           <h3 className="text-xl font-bold text-amber-400 mb-2">{park.name}</h3>
@@ -327,6 +451,11 @@ const ParkCard = ({ park }) => {
           <div className="flex items-center gap-2 text-sm text-amber-200/60">
             <MapPin className="w-4 h-4" />
             <span>{park.city}, {park.region}</span>
+            {distance && (
+              <span className="ml-auto text-cyan-400">
+                {distance < 1 ? `${Math.round(distance * 1000)}m` : `${Math.round(distance)}km`}
+              </span>
+            )}
           </div>
           {(park.opening_date || park.closing_date) && (
             <div className="flex items-center gap-2 text-sm text-amber-200/60 mt-1">
@@ -359,6 +488,8 @@ const ParkDetailPage = () => {
   const [coupons, setCoupons] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showAboutModal, setShowAboutModal] = useState(false);
+  const [showEventsModal, setShowEventsModal] = useState(false);
 
   useEffect(() => {
     fetchParkDetails();
@@ -382,7 +513,7 @@ const ParkDetailPage = () => {
 
   const filteredCoupons = coupons.filter(c => 
     c.ride_name.toLowerCase().includes(search.toLowerCase()) ||
-    c.ride_number.toLowerCase().includes(search.toLowerCase())
+    (c.ride_number && c.ride_number.toLowerCase().includes(search.toLowerCase()))
   );
 
   if (loading) {
@@ -411,7 +542,7 @@ const ParkDetailPage = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a1a] via-transparent to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
           <div className="max-w-4xl mx-auto">
-            <h1 className="text-3xl md:text-4xl font-bold text-amber-400 text-glow-gold" data-testid="park-name">
+            <h1 className="text-3xl md:text-4xl font-bold text-amber-400" data-testid="park-name">
               {park.name}
             </h1>
             <div className="flex flex-wrap items-center gap-4 mt-2 text-amber-200/80">
@@ -430,11 +561,35 @@ const ParkDetailPage = () => {
 
       {/* Search & Coupons */}
       <div className="max-w-4xl mx-auto px-4 mt-6">
-        <p className="text-amber-100/70 mb-6">{park.description}</p>
+        {park.description && <p className="text-amber-100/70 mb-6">{park.description}</p>}
+
+        {/* Social Links & Info Buttons */}
+        <div className="flex flex-wrap gap-3 mb-6">
+          {park.facebook_url && (
+            <a href={park.facebook_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 px-4 py-2 rounded-xl transition-colors">
+              <Facebook className="w-5 h-5" /> Facebook
+            </a>
+          )}
+          {park.instagram_url && (
+            <a href={park.instagram_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-pink-600/20 hover:bg-pink-600/30 text-pink-400 px-4 py-2 rounded-xl transition-colors">
+              <Instagram className="w-5 h-5" /> Instagram
+            </a>
+          )}
+          {park.about_us && (
+            <button onClick={() => setShowAboutModal(true)} className="flex items-center gap-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 px-4 py-2 rounded-xl transition-colors">
+              <Info className="w-5 h-5" /> Chi Siamo
+            </button>
+          )}
+          {park.events && (
+            <button onClick={() => setShowEventsModal(true)} className="flex items-center gap-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 px-4 py-2 rounded-xl transition-colors">
+              <PartyPopper className="w-5 h-5" /> Eventi
+            </button>
+          )}
+        </div>
 
         {/* Search */}
         <div className="relative mb-6">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-amber-400/60" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400/60" />
           <input
             type="text"
             placeholder="Cerca giostra per nome o numero..."
@@ -475,11 +630,52 @@ const ParkDetailPage = () => {
           </div>
         )}
 
+        {/* Disclaimer */}
+        {filteredCoupons.length > 0 && (
+          <div className="mt-8 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-200/70 text-xs">
+            I gestori si riservano il diritto di non accettare i coupon in caso di palese abuso, malfunzionamento tecnico del dispositivo o comportamenti non idonei. Lo sconto non è cumulabile con altre promozioni. La disponibilità delle promozioni è soggetta agli orari e alle condizioni di apertura.
+          </div>
+        )}
+
         {/* Ad Placeholder */}
         <div className="ad-placeholder mt-8">
           <p>Spazio pubblicitario</p>
         </div>
       </div>
+
+      {/* Chi Siamo Modal */}
+      {showAboutModal && park.about_us && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="ticket-card max-w-lg w-full p-6 max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-amber-400 flex items-center gap-2">
+                <Info className="w-5 h-5" /> Chi Siamo
+              </h3>
+              <button onClick={() => setShowAboutModal(false)} className="text-amber-400/60 hover:text-amber-400">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="text-amber-100/80 whitespace-pre-wrap">{park.about_us}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Eventi Modal */}
+      {showEventsModal && park.events && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="ticket-card max-w-lg w-full p-6 max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-purple-400 flex items-center gap-2">
+                <PartyPopper className="w-5 h-5" /> Eventi
+              </h3>
+              <button onClick={() => setShowEventsModal(false)} className="text-amber-400/60 hover:text-amber-400">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="text-amber-100/80 whitespace-pre-wrap">{park.events}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -541,46 +737,70 @@ const CouponCard = ({ coupon, cooldownHours }) => {
     <>
       <Confetti show={showConfetti} />
       
-      <div className={`ticket-card luna-card p-4 ${useResult?.success ? 'coupon-success' : ''}`} data-testid={`coupon-card-${coupon.id}`}>
-        <div className="flex justify-between items-start mb-3">
-          <div>
-            <h3 className="text-lg font-bold text-amber-400">{coupon.ride_name}</h3>
-            <p className="text-amber-200/60 text-sm">Giostra N° {coupon.ride_number}</p>
-          </div>
-          <div className="bg-gradient-to-r from-amber-500 to-amber-600 text-[#0a0a1a] px-3 py-1 rounded-full font-bold text-lg">
-            -{coupon.discount_description}
-          </div>
-        </div>
-
-        <p className="text-amber-100/70 text-sm mb-3">
-          Titolare: <span className="text-amber-300">{coupon.owner_surname}</span>
-        </p>
-
-        {!availability.available && (
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-2 mb-3 text-sm text-amber-300 flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            {availability.message}
-          </div>
-        )}
-
-        <button
-          onClick={handleUseNow}
-          disabled={!availability.available}
-          className="btn-use-now w-full"
-          data-testid={`use-coupon-btn-${coupon.id}`}
-        >
-          {availability.available ? (
-            <>
-              <Ticket className="w-5 h-5 inline mr-2" />
-              Usa Ora
-            </>
+      <div className={`ticket-card luna-card overflow-hidden ${useResult?.success ? 'coupon-success' : ''}`} data-testid={`coupon-card-${coupon.id}`}>
+        {/* Immagine coupon con link */}
+        {coupon.image_url && (
+          coupon.link_url ? (
+            <a href={coupon.link_url} target="_blank" rel="noopener noreferrer" className="block">
+              <div className="h-32 relative">
+                <img src={coupon.image_url} alt={coupon.ride_name} className="w-full h-full object-cover" />
+                <div className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                  <ExternalLink className="w-3 h-3" /> Apri link
+                </div>
+              </div>
+            </a>
           ) : (
-            <>
-              <Clock className="w-5 h-5 inline mr-2" />
-              Non disponibile
-            </>
+            <div className="h-32">
+              <img src={coupon.image_url} alt={coupon.ride_name} className="w-full h-full object-cover" />
+            </div>
+          )
+        )}
+        
+        <div className="p-4">
+          <div className="flex justify-between items-start mb-3">
+            <div>
+              <h3 className="text-lg font-bold text-amber-400">{coupon.ride_name}</h3>
+              {coupon.ride_number && (
+                <p className="text-amber-200/60 text-sm">Giostra N° {coupon.ride_number}</p>
+              )}
+            </div>
+            <div className="bg-gradient-to-r from-amber-500 to-amber-600 text-[#0a0a1a] px-3 py-1 rounded-full font-bold text-lg">
+              {coupon.discount_description}
+            </div>
+          </div>
+
+          {coupon.owner_surname && (
+            <p className="text-amber-100/70 text-sm mb-3">
+              Titolare: <span className="text-amber-300">{coupon.owner_surname}</span>
+            </p>
           )}
-        </button>
+
+          {!availability.available && (
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-2 mb-3 text-sm text-amber-300 flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              {availability.message}
+            </div>
+          )}
+
+          <button
+            onClick={handleUseNow}
+            disabled={!availability.available}
+            className="btn-use-now w-full"
+            data-testid={`use-coupon-btn-${coupon.id}`}
+          >
+            {availability.available ? (
+              <>
+                <Ticket className="w-5 h-5 inline mr-2" />
+                Usa Ora
+              </>
+            ) : (
+              <>
+                <Clock className="w-5 h-5 inline mr-2" />
+                Non disponibile
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Use Confirmation Modal */}
@@ -707,8 +927,8 @@ const LoginPage = () => {
     <div className="min-h-screen starry-bg flex items-center justify-center p-4">
       <div className="ticket-card max-w-md w-full p-6 md:p-8">
         <div className="text-center mb-8">
-          <FerrisWheel className="w-16 h-16 text-amber-400 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-amber-400 text-glow-gold">Accedi</h1>
+          <img src="/logo.png" alt="MyLunaPark" className="w-16 h-16 mx-auto mb-4 rounded-xl" />
+          <h1 className="text-2xl font-bold text-cyan-400">Accedi</h1>
           <p className="text-amber-100/70 mt-2">Entra nel mondo dei coupon</p>
         </div>
 
@@ -753,6 +973,10 @@ const LoginPage = () => {
               </button>
             </div>
           </div>
+
+          <Link to="/forgot-password" className="text-cyan-400 text-sm hover:underline block text-right" data-testid="forgot-password-link">
+            <KeyRound className="w-4 h-4 inline mr-1" /> Password dimenticata?
+          </Link>
 
           <button
             type="submit"
@@ -1191,7 +1415,14 @@ const ParkManagementPage = () => {
     opening_date: '',
     closing_date: '',
     coupon_cooldown_hours: 24,
-    image_url: ''
+    image_url: '',
+    facebook_url: '',
+    instagram_url: '',
+    about_us: '',
+    events: '',
+    valid_days: [],
+    valid_hours_start: '',
+    valid_hours_end: ''
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -1417,6 +1648,88 @@ const ParkManagementPage = () => {
                   className="search-input rounded-xl"
                   min="1"
                   data-testid="park-cooldown-input"
+                />
+              </div>
+            </div>
+
+            {/* Social Links */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-amber-200 text-sm mb-2 flex items-center gap-2">
+                  <Facebook className="w-4 h-4 text-blue-400" /> Link Facebook
+                </label>
+                <input
+                  type="url"
+                  value={formData.facebook_url || ''}
+                  onChange={(e) => setFormData({ ...formData, facebook_url: e.target.value })}
+                  className="search-input rounded-xl"
+                  placeholder="https://facebook.com/..."
+                  data-testid="park-facebook-input"
+                />
+              </div>
+              <div>
+                <label className="block text-amber-200 text-sm mb-2 flex items-center gap-2">
+                  <Instagram className="w-4 h-4 text-pink-400" /> Link Instagram
+                </label>
+                <input
+                  type="url"
+                  value={formData.instagram_url || ''}
+                  onChange={(e) => setFormData({ ...formData, instagram_url: e.target.value })}
+                  className="search-input rounded-xl"
+                  placeholder="https://instagram.com/..."
+                  data-testid="park-instagram-input"
+                />
+              </div>
+            </div>
+
+            {/* Chi Siamo */}
+            <div>
+              <label className="block text-amber-200 text-sm mb-2 flex items-center gap-2">
+                <Info className="w-4 h-4 text-amber-400" /> Chi Siamo
+              </label>
+              <textarea
+                value={formData.about_us || ''}
+                onChange={(e) => setFormData({ ...formData, about_us: e.target.value })}
+                className="search-input rounded-xl h-24 resize-none"
+                placeholder="Storia del luna park, info sulla famiglia, tradizione..."
+                data-testid="park-aboutus-input"
+              />
+            </div>
+
+            {/* Eventi */}
+            <div>
+              <label className="block text-amber-200 text-sm mb-2 flex items-center gap-2">
+                <PartyPopper className="w-4 h-4 text-purple-400" /> Eventi
+              </label>
+              <textarea
+                value={formData.events || ''}
+                onChange={(e) => setFormData({ ...formData, events: e.target.value })}
+                className="search-input rounded-xl h-24 resize-none"
+                placeholder="Eventi speciali, serate a tema, spettacoli..."
+                data-testid="park-events-input"
+              />
+            </div>
+
+            {/* Validità Coupon */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-amber-200 text-sm mb-2">Orario validità coupon (inizio)</label>
+                <input
+                  type="time"
+                  value={formData.valid_hours_start || ''}
+                  onChange={(e) => setFormData({ ...formData, valid_hours_start: e.target.value })}
+                  className="search-input rounded-xl"
+                  data-testid="park-valid-hours-start-input"
+                />
+              </div>
+              <div>
+                <label className="block text-amber-200 text-sm mb-2">Orario validità coupon (fine)</label>
+                <input
+                  type="time"
+                  value={formData.valid_hours_end || ''}
+                  onChange={(e) => setFormData({ ...formData, valid_hours_end: e.target.value })}
+                  className="search-input rounded-xl"
+                  data-testid="park-valid-hours-end-input"
                 />
               </div>
             </div>
@@ -1965,6 +2278,71 @@ const AdminPage = () => {
   );
 };
 
+// Forgot Password Page
+const ForgotPasswordPage = () => {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await axios.post(`${API}/auth/forgot-password`, { email });
+      setSent(true);
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen starry-bg flex items-center justify-center p-4">
+      <div className="ticket-card max-w-md w-full p-6 md:p-8">
+        <div className="text-center mb-8">
+          <KeyRound className="w-16 h-16 text-cyan-400 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-cyan-400">Password dimenticata</h1>
+          <p className="text-amber-100/70 mt-2">Inserisci la tua email per recuperare la password</p>
+        </div>
+
+        {sent ? (
+          <div className="text-center">
+            <Check className="w-16 h-16 text-green-400 mx-auto mb-4" />
+            <p className="text-amber-100/80 mb-4">
+              Se l'email esiste, riceverai le istruzioni per il reset della password.
+            </p>
+            <Link to="/login" className="btn-luna inline-block">
+              Torna al login
+            </Link>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-amber-200 text-sm mb-2">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="search-input rounded-xl"
+                placeholder="email@esempio.it"
+                required
+                data-testid="forgot-email-input"
+              />
+            </div>
+            <button type="submit" disabled={loading} className="btn-luna w-full" data-testid="forgot-submit-btn">
+              {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Invia istruzioni'}
+            </button>
+            <Link to="/login" className="block text-center text-amber-400 text-sm hover:underline">
+              Torna al login
+            </Link>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Main App Component
 function AppContent() {
   const auth = useAuth();
@@ -1998,6 +2376,7 @@ function AppContent() {
           <Route path="/park/:parkId" element={<ParkDetailPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/dashboard/park/:parkId" element={<ParkManagementPage />} />
           <Route path="/admin" element={<AdminPage />} />
