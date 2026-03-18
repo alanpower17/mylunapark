@@ -160,62 +160,89 @@ def create_google_form(park_name: str, city: str) -> dict:
 
 def create_google_sheet(park_name: str, city: str, organizer_email: str = None, form_id: str = None) -> dict:
     """
-    Create a Google Sheet for storing ride/coupon data
-    Returns: dict with sheet_id, sheet_url
+    Create a simple Google Sheet - organizer will manually link the form responses
+    Since service accounts have 0 GB quota, we create a minimal instruction sheet
+    """
+    if not organizer_email:
+        return {"error": "Organizer email is required"}
+    
+    # Return instructions for manual setup
+    instructions_url = "https://support.google.com/docs/answer/2917686"
+    
+    return {
+        "success": True,
+        "sheet_id": None,
+        "sheet_url": instructions_url,
+        "message": "Form created! To collect responses, open the form and go to Responses tab > Link to Sheets"
+    }
+
+def get_form_responses(form_id: str) -> dict:
+    """
+    Get all responses from a Google Form
+    Returns: dict with responses data
     """
     credentials = get_credentials()
     if not credentials:
         return {"error": "Credentials not available"}
     
     try:
-        # Use gspread for easier sheet manipulation
-        gc = gspread.authorize(credentials)
+        forms_service = build('forms', 'v1', credentials=credentials)
         
-        # Create the spreadsheet
-        spreadsheet = gc.create(f"MyLunaPark - {park_name} ({city})")
+        # Get the form responses
+        result = forms_service.forms().responses().list(formId=form_id).execute()
         
-        # Get the first worksheet
-        worksheet = spreadsheet.sheet1
-        worksheet.update_title("Coupon")
+        responses = result.get('responses', [])
         
-        # Add headers
-        headers = ["Timestamp", "Nome Giostra", "Sconto", "Numero Giostra", "Cognome Titolare", "Importato"]
-        worksheet.append_row(headers)
-        
-        # Format headers (bold)
-        worksheet.format('A1:F1', {
-            'textFormat': {'bold': True},
-            'backgroundColor': {'red': 0.9, 'green': 0.9, 'blue': 0.9}
-        })
-        
-        # CRITICAL: Share with service account email to allow API access
-        SERVICE_ACCOUNT_EMAIL = 'mylunapark-service@mylunapark.iam.gserviceaccount.com'
-        try:
-            spreadsheet.share(SERVICE_ACCOUNT_EMAIL, perm_type='user', role='writer', notify=False)
-            logger.info(f"Shared sheet with service account: {SERVICE_ACCOUNT_EMAIL}")
-        except Exception as e:
-            logger.warning(f"Could not share with service account: {e}")
-        
-        # Share with organizer email if provided
-        if organizer_email:
-            try:
-                spreadsheet.share(organizer_email, perm_type='user', role='writer', notify=True, 
-                                email_message=f"Ecco il tuo Google Sheet per gestire i coupon di {park_name}!")
-                logger.info(f"Shared sheet with organizer: {organizer_email}")
-            except Exception as e:
-                logger.warning(f"Could not share with organizer: {e}")
+        # Parse responses into coupon data format
+        parsed_data = []
+        for response in responses:
+            answers = response.get('answers', {})
+            
+            # Extract answer values (Form questions are stored by ID)
+            data_row = {
+                'timestamp': response.get('createTime', ''),
+                'nome_giostra': '',
+                'sconto': '',
+                'numero_giostra': '',
+                'cognome_titolare': '',
+                'response_id': response.get('responseId', '')
+            }
+            
+            # Parse answers - we need to match question IDs to fields
+            # Question 0: Nome Giostra
+            # Question 1: Sconto  
+            # Question 2: Numero Giostra
+            # Question 3: Cognome Titolare
+            
+            for question_id, answer in answers.items():
+                text_answer = answer.get('textAnswers', {}).get('answers', [{}])[0].get('value', '')
+                
+                # Map answers to fields (based on question order)
+                # This is a simplified mapping - in production you'd store question IDs
+                if 'nome' in question_id.lower() or not data_row['nome_giostra']:
+                    if not data_row['nome_giostra']:
+                        data_row['nome_giostra'] = text_answer
+                elif 'sconto' in question_id.lower() or (data_row['nome_giostra'] and not data_row['sconto']):
+                    if not data_row['sconto']:
+                        data_row['sconto'] = text_answer
+                elif 'numero' in question_id.lower() or (data_row['sconto'] and not data_row['numero_giostra']):
+                    if not data_row['numero_giostra']:
+                        data_row['numero_giostra'] = text_answer
+                else:
+                    if not data_row['cognome_titolare']:
+                        data_row['cognome_titolare'] = text_answer
+            
+            parsed_data.append(data_row)
         
         return {
             "success": True,
-            "sheet_id": spreadsheet.id,
-            "sheet_url": spreadsheet.url
+            "data": parsed_data,
+            "count": len(parsed_data)
         }
         
     except Exception as e:
-        logger.error(f"Error creating sheet: {e}")
+        logger.error(f"Error reading form responses: {e}")
         return {"error": str(e)}
-
-def link_form_to_sheet(form_id: str, sheet_id: str) -> dict:
     """
     Link a Google Form to a Google Sheet for responses
     Note: This requires the form to be set up for responses manually or via Apps Script

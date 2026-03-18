@@ -15,7 +15,7 @@ import bcrypt
 import base64
 
 # Google Integration
-from google_integration import create_form_and_sheet_for_park, get_sheet_data, add_row_to_sheet
+from google_integration import create_form_and_sheet_for_park, get_sheet_data, add_row_to_sheet, get_form_responses
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -484,18 +484,18 @@ async def get_google_sheet_data(park_id: str, user: dict = Depends(require_organ
 
 @api_router.post("/lunaparks/{park_id}/import-from-google")
 async def import_coupons_from_google(park_id: str, user: dict = Depends(require_organizer)):
-    """Importa i coupon dal Google Sheet"""
+    """Importa i coupon dalle risposte del Google Form"""
     park = await db.luna_parks.find_one({"id": park_id}, {"_id": 0})
     if not park:
         raise HTTPException(status_code=404, detail="Luna Park non trovato")
     if park["organizer_id"] != user["id"] and user["role"] != "admin":
         raise HTTPException(status_code=403, detail="Non autorizzato")
     
-    if not park.get("google_sheet_id"):
-        raise HTTPException(status_code=400, detail="Nessun Google Sheet collegato")
+    if not park.get("google_form_id"):
+        raise HTTPException(status_code=400, detail="Nessun Google Form collegato")
     
-    # Get data from sheet
-    result = get_sheet_data(park["google_sheet_id"])
+    # Get responses from form
+    result = get_form_responses(park["google_form_id"])
     
     if "error" in result:
         raise HTTPException(status_code=500, detail=result["error"])
@@ -503,12 +503,8 @@ async def import_coupons_from_google(park_id: str, user: dict = Depends(require_
     imported_count = 0
     
     for row in result.get("data", []):
-        # Skip already imported rows
-        if row.get("Importato") == "Sì":
-            continue
-        
-        nome_giostra = row.get("Nome Giostra", "").strip()
-        sconto = row.get("Sconto", "").strip()
+        nome_giostra = row.get("nome_giostra", "").strip()
+        sconto = row.get("sconto", "").strip()
         
         if not nome_giostra or not sconto:
             continue
@@ -525,11 +521,21 @@ async def import_coupons_from_google(park_id: str, user: dict = Depends(require_
                 "id": str(uuid.uuid4()),
                 "luna_park_id": park_id,
                 "name": nome_giostra,
-                "number": row.get("Numero Giostra", "").strip() or None,
-                "owner_surname": row.get("Cognome Titolare", "").strip() or None,
+                "number": row.get("numero_giostra", "").strip() or None,
+                "owner_surname": row.get("cognome_titolare", "").strip() or None,
                 "created_at": datetime.now(timezone.utc).isoformat()
             }
             await db.rides.insert_one(ride)
+        
+        # Check if coupon already exists for this ride
+        existing = await db.coupons.find_one({
+            "luna_park_id": park_id,
+            "ride_id": ride["id"],
+            "discount_description": sconto
+        }, {"_id": 0})
+        
+        if existing:
+            continue  # Skip duplicate
         
         # Create the coupon
         coupon = {
@@ -537,8 +543,8 @@ async def import_coupons_from_google(park_id: str, user: dict = Depends(require_
             "luna_park_id": park_id,
             "ride_id": ride["id"],
             "ride_name": nome_giostra,
-            "ride_number": row.get("Numero Giostra", "").strip() or None,
-            "owner_surname": row.get("Cognome Titolare", "").strip() or None,
+            "ride_number": row.get("numero_giostra", "").strip() or None,
+            "owner_surname": row.get("cognome_titolare", "").strip() or None,
             "discount_description": sconto,
             "is_active": True,
             "created_at": datetime.now(timezone.utc).isoformat()
@@ -548,7 +554,7 @@ async def import_coupons_from_google(park_id: str, user: dict = Depends(require_
     
     return {
         "success": True,
-        "message": f"Importati {imported_count} coupon",
+        "message": f"Importati {imported_count} nuovi coupon",
         "imported_count": imported_count
     }
 

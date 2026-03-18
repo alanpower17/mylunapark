@@ -1666,7 +1666,7 @@ const ParkManagementPage = () => {
                   <FileSpreadsheet className="w-5 h-5" /> Integrazione Google Forms
                 </h3>
                 <p className="text-amber-100/70 text-sm">
-                  Genera un Google Form per raccogliere i coupon dai giostrai. I dati verranno salvati in un Google Sheet che potrai importare nell'app.
+                  Genera un Google Form per raccogliere i coupon dai giostrai. Le risposte del form verranno importate automaticamente nell'app.
                 </p>
                 
                 {googleIntegrationMessage && (
@@ -1692,33 +1692,21 @@ const ParkManagementPage = () => {
                     ) : (
                       <>
                         <FileSpreadsheet className="w-5 h-5 mr-2" />
-                        Crea Google Form e Foglio
+                        Crea Google Form
                       </>
                     )}
                   </button>
                 ) : (
                   <div className="space-y-3">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={handleCopyFormLink}
-                        className="btn-luna"
-                        data-testid="copy-form-link-btn"
-                      >
-                        <Copy className="w-4 h-4 mr-2" />
-                        Copia Link Modulo
-                      </button>
-                      <a
-                        href={park.google_sheet_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn-luna flex items-center justify-center"
-                        data-testid="open-sheet-btn"
-                      >
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        Apri Database
-                      </a>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={handleCopyFormLink}
+                      className="btn-luna w-full"
+                      data-testid="copy-form-link-btn"
+                    >
+                      <Copy className="w-4 h-4 mr-2" />
+                      Copia Link Modulo
+                    </button>
                     <button
                       type="button"
                       onClick={handleImportCoupons}
@@ -1731,12 +1719,12 @@ const ParkManagementPage = () => {
                       ) : (
                         <>
                           <Download className="w-5 h-5 mr-2" />
-                          Importa Coupon da Google Sheet
+                          Importa Risposte dal Form
                         </>
                       )}
                     </button>
                     <p className="text-amber-100/60 text-xs">
-                      💡 Condividi il link del modulo con i giostrai, poi clicca "Importa" per sincronizzare i dati.
+                      💡 Condividi il link del modulo con i giostrai, poi clicca "Importa" per sincronizzare le risposte.
                     </p>
                   </div>
                 )}
