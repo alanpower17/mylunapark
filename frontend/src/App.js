@@ -56,21 +56,17 @@ const Header = ({ user, logout }) => {
       <div className="bg-gradient-to-r from-[#1a0a2e]/95 via-[#0f1628]/95 to-[#1a0a2e]/95 backdrop-blur-md border-b border-cyan-500/20">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-           <Link to="/" className="flex items-center gap-4 group" data-testid="logo-link">
-  <div className="relative">
-    {/* Logo ingrandito e con effetto luce */}
-    <img 
-      src="/logo.png" 
-      alt="MyLunaPark" 
-      className="w-20 h-20 md:w-24 md:h-24 rounded-2xl shadow-2xl shadow-cyan-500/40 transition-transform group-hover:scale-105" 
-    />
-    <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
-  </div>
-  <span className="font-extrabold text-2xl md:text-3xl metallic-text hidden sm:block tracking-tighter">
+          <Link to="/" className="flex items-center gap-3" data-testid="logo-link">
+  <img 
+    src={`${process.env.PUBLIC_URL}/logo.png`} 
+    alt="MyLunaPark" 
+    className="w-24 h-24 md:w-32 md:h-32 rounded-xl shadow-lg object-contain" 
+    onError={(e) => { e.target.src = "https://via.placeholder.com/150?text=Logo+Missing"; }}
+  />
+  <span className="font-bold text-2xl metallic-text hidden sm:block">
     MyLunaPark
   </span>
 </Link>
-
             {/* Desktop Nav */}
             <nav className="hidden md:flex items-center gap-4">
               <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`} data-testid="nav-home">
