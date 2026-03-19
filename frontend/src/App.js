@@ -416,21 +416,43 @@ const ParkDetailPage = () => {
     try {
       setLoading(true);
       
-      // 1. DATI FINTI DEL LUNA PARK (Mock Data)
-      const mockPark = {
-        id: parseInt(parkId),
-        name: parkId === '1' ? "Luna Park Genova" : "Luna Park Milano",
-        city: parkId === '1' ? "Genova" : "Milano",
-        region: parkId === '1' ? "Liguria" : "Lombardia",
-        image_url: parkId === '1' ? "https://images.unsplash.com/photo-1513889961551-628c1e5e2ee9" : "https://images.unsplash.com/photo-1533031024628-868ee3a40498",
-        description: "Il luna park più divertente della città. Tante attrazioni per grandi e piccini!",
-        opening_hours: "15:00 - 24:00",
-        facebook_url: "https://facebook.com",
-        instagram_url: "https://instagram.com",
-        about_us: "Dal 1980 portiamo il divertimento nelle vostre piazze.",
-        events: "Ogni mercoledì: Giornata dello Studente (Prendi 2 Paghi 1)!",
-        coupon_cooldown_hours: 24
-      };
+     // Importa i componenti necessari di Firestore se non presenti in alto
+import { doc, getDoc, query, where } from "firebase/firestore";
+
+const fetchParkDetails = async () => {
+  try {
+    setLoading(true);
+    
+    // 1. Lettura del Parco specifico tramite l'ID dell'URL
+    const parkRef = doc(db, "parks", parkId);
+    const parkSnap = await getDoc(parkRef);
+    
+    if (parkSnap.exists()) {
+      const parkData = { id: parkSnap.id, ...parkSnap.data() };
+      setPark(parkData);
+
+      // 2. Lettura REALE dei Coupon legati a questo parco
+      // Cerchiamo nella collezione 'coupons' quelli che hanno 'parkId' uguale a quello attuale
+      const couponsRef = collection(db, "coupons");
+      const q = query(couponsRef, where("parkId", "==", parkId));
+      const querySnapshot = await getDocs(q);
+      
+      const realCoupons = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      setCoupons(realCoupons);
+    } else {
+      console.log("Nessun parco trovato con questo ID");
+    }
+
+  } catch (error) {
+    console.error('Errore Firebase:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
       // 2. DATI FINTI DEI COUPON (Mock Data)
       const mockCoupons = [
