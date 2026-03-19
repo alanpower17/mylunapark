@@ -424,8 +424,6 @@ const ParkDetailPage = () => {
     try {
       setLoading(true);
       
-     // Importa i componenti necessari di Firestore se non presenti in alto
-import { doc, getDoc, query, where } from "firebase/firestore";
 
 const fetchParkDetails = async () => {
   try {
