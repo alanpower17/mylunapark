@@ -26,10 +26,9 @@ jobs:
 
       - name: Clean and Install Dependencies
         run: |
-          # Forza l'installazione delle librerie che causavano il crash
-          npm install ajv ajv-keywords --save-dev
-          # Installa tutto il resto ignorando i conflitti di versione
-          npm install --legacy-peer-deps
+          # Usiamo --force per ignorare i conflitti tra date-fns e react-day-picker
+          npm install ajv ajv-keywords --save-dev --force
+          npm install --force
 
       - name: Build project
         run: |
