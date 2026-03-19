@@ -45,7 +45,6 @@ const Confetti = ({ show }) => {
 // Header Component
 const Header = ({ user, logout }) => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const navigate = useNavigate();
   const location = useLocation();
 
   const isOrganizer = user?.role === 'organizzatore' || user?.role === 'admin';
@@ -56,94 +55,100 @@ const Header = ({ user, logout }) => {
       <div className="bg-gradient-to-r from-[#1a0a2e]/95 via-[#0f1628]/95 to-[#1a0a2e]/95 backdrop-blur-md border-b border-cyan-500/20">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3" data-testid="logo-link">
-  <img 
-    src={`${process.env.PUBLIC_URL}/logo.png`} 
-    alt="MyLunaPark" 
-    className="w-24 h-24 md:w-32 md:h-32 rounded-xl shadow-lg object-contain" 
-    onError={(e) => { e.target.src = "https://via.placeholder.com/150?text=Logo+Missing"; }}
-  />
-  <span className="font-bold text-2xl metallic-text hidden sm:block">
-    MyLunaPark
-  </span>
-</Link>
-            {/* Desktop Nav */}
-            <nav className="hidden md:flex items-center gap-4">
+            
+            {/* LOGO UNICO (Sinistra) - Ingrandito */}
+            <Link to="/" className="flex items-center gap-3 group" data-testid="logo-link">
+              <div className="relative">
+                <img 
+                  src="./logo.png" 
+                  alt="MyLunaPark" 
+                  className="w-20 h-20 md:w-28 md:h-28 rounded-xl shadow-lg object-contain transition-transform group-hover:scale-105" 
+                  onError={(e) => { e.target.src = "https://via.placeholder.com/150?text=MyLunaPark"; }}
+                />
+                <div className="absolute -inset-1 bg-cyan-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
+              </div>
+              <span className="font-bold text-2xl metallic-text hidden sm:block">
+                MyLunaPark
+              </span>
+            </Link>
+
+            {/* Desktop Nav (Destra) */}
+            <nav className="hidden md:flex items-center gap-6">
               <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`} data-testid="nav-home">
                 <Home className="w-4 h-4 inline mr-1" /> Home
               </Link>
+              
               {isOrganizer && (
                 <Link to="/dashboard" className={`nav-link ${location.pathname.startsWith('/dashboard') ? 'active' : ''}`} data-testid="nav-dashboard">
                   <Settings className="w-4 h-4 inline mr-1" /> Dashboard
                 </Link>
               )}
+              
               {isAdmin && (
                 <Link to="/admin" className={`nav-link ${location.pathname.startsWith('/admin') ? 'active' : ''}`} data-testid="nav-admin">
                   <Shield className="w-4 h-4 inline mr-1" /> Admin
                 </Link>
               )}
-              <a href="https://sites.google.com/view/privacypolicymylunaparkappwebs/home-page" target="_blank" rel="noopener noreferrer" className="nav-link text-amber-200/60 hover:text-amber-200" data-testid="nav-privacy">
+
+              <a href="https://sites.google.com/view/privacypolicymylunaparkappwebs/home-page" target="_blank" rel="noopener noreferrer" className="nav-link text-amber-200/60 hover:text-amber-200">
                 Privacy
               </a>
+
+              {/* Sezione Utente / Login */}
+              <div className="h-8 w-[1px] bg-cyan-500/20 mx-2"></div> {/* Separatore visivo */}
+
               {user ? (
-                <div className="flex items-center gap-3">
-                  <span className="text-amber-200 text-sm">{user.name}</span>
-                  <button onClick={logout} className="nav-link text-pink-400 hover:text-pink-300" data-testid="logout-btn">
-                    <LogOut className="w-4 h-4" />
+                <div className="flex items-center gap-4">
+                  <span className="text-amber-200 text-sm font-medium">{user.name}</span>
+                  <button onClick={logout} className="p-2 text-pink-400 hover:bg-pink-400/10 rounded-full transition-colors" title="Esci">
+                    <LogOut className="w-5 h-5" />
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-2">
-                 <Link to="/" className="flex items-center gap-4" data-testid="logo-link">
-  <img src="/logo.png" alt="MyLunaPark" className="w-14 h-14 md:w-16 md:h-16 rounded-xl shadow-lg shadow-cyan-500/20" />
-  <span className="font-bold text-2xl metallic-text hidden sm:block">
-    MyLunaPark
-  </span>
-</Link>
+                <div className="flex items-center gap-4">
+                  <Link to="/login" className="nav-link !text-amber-400 font-bold border border-amber-400/30 px-4 py-1.5 rounded-lg hover:bg-amber-400/10">
+                    Accedi
+                  </Link>
                 </div>
               )}
             </nav>
 
             {/* Mobile Menu Button */}
             <button 
-              className="md:hidden text-amber-400 p-2"
+              className="md:hidden text-amber-400 p-2 hover:bg-amber-400/10 rounded-lg"
               onClick={() => setMenuOpen(!menuOpen)}
-              data-testid="mobile-menu-btn"
             >
-              {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {menuOpen ? <X className="w-8 h-8" /> : <Menu className="w-8 h-8" />}
             </button>
           </div>
 
-          {/* Mobile Nav */}
+          {/* Mobile Nav Dropdown */}
           {menuOpen && (
-            <nav className="md:hidden mt-4 pb-2 flex flex-col gap-2">
-              <Link to="/" className="nav-link" onClick={() => setMenuOpen(false)} data-testid="mobile-nav-home">
-                <Home className="w-4 h-4 inline mr-2" /> Home
+            <nav className="md:hidden mt-4 pb-4 flex flex-col gap-3 border-t border-cyan-500/10 pt-4">
+              <Link to="/" className="nav-link py-2" onClick={() => setMenuOpen(false)}>
+                <Home className="w-5 h-5 inline mr-3" /> Home
               </Link>
               {isOrganizer && (
-                <Link to="/dashboard" className="nav-link" onClick={() => setMenuOpen(false)} data-testid="mobile-nav-dashboard">
-                  <Settings className="w-4 h-4 inline mr-2" /> Dashboard
+                <Link to="/dashboard" className="nav-link py-2" onClick={() => setMenuOpen(false)}>
+                  <Settings className="w-5 h-5 inline mr-3" /> Dashboard
                 </Link>
               )}
               {isAdmin && (
-                <Link to="/admin" className="nav-link" onClick={() => setMenuOpen(false)} data-testid="mobile-nav-admin">
-                  <Shield className="w-4 h-4 inline mr-2" /> Admin
+                <Link to="/admin" className="nav-link py-2" onClick={() => setMenuOpen(false)}>
+                  <Shield className="w-5 h-5 inline mr-3" /> Admin
                 </Link>
               )}
-              <a href="https://sites.google.com/view/privacypolicymylunaparkappwebs/home-page" target="_blank" rel="noopener noreferrer" className="nav-link text-amber-200/60" onClick={() => setMenuOpen(false)}>
-                Privacy Policy
-              </a>
               {user ? (
-                <button onClick={() => { logout(); setMenuOpen(false); }} className="nav-link text-left text-pink-400" data-testid="mobile-logout-btn">
-                  <LogOut className="w-4 h-4 inline mr-2" /> Esci ({user.name})
+                <button onClick={() => { logout(); setMenuOpen(false); }} className="nav-link py-2 text-left text-pink-400">
+                  <LogOut className="w-5 h-5 inline mr-3" /> Esci ({user.name})
                 </button>
               ) : (
                 <>
-                  <Link to="/register" className="nav-link text-amber-400 font-bold" onClick={() => setMenuOpen(false)} data-testid="mobile-register-link">
-                    <Gift className="w-4 h-4 inline mr-2" /> Iscriviti Gratis
+                  <Link to="/register" className="nav-link py-2 text-amber-400 font-bold" onClick={() => setMenuOpen(false)}>
+                    <Gift className="w-5 h-5 inline mr-3" /> Iscriviti Gratis
                   </Link>
-                  <Link to="/login" className="nav-link" onClick={() => setMenuOpen(false)} data-testid="mobile-login-link">
-                    <User className="w-4 h-4 inline mr-2" /> Accedi
+                  <Link to="/login" className="nav-link py-2" onClick={() => setMenuOpen(false)}>
+                    <User className="w-5 h-5 inline mr-3" /> Accedi
                   </Link>
                 </>
               )}
