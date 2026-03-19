@@ -179,31 +179,39 @@ const HomePage = () => {
   };
 
   const fetchParks = async (searchQuery = '') => {
-  try {
-    setLoading(true);
-    // DATI FINTI PER FAR FUNZIONARE L'APP SU GITHUB PAGES
-    const mockParks = [
-      {
-        id: 1,
-        name: "Luna Park Genova",
-        city: "Genova",
-        region: "Liguria",
-        image_url: "https://images.unsplash.com/photo-1513889961551-628c1e5e2ee9",
-        description: "Il luna park mobile più grande d'Europa.",
-        latitude: 44.4056,
-        longitude: 8.9463
-      },
-      {
-        id: 2,
-        name: "Luna Park Milano",
-        city: "Milano",
-        region: "Lombardia",
-        image_url: "https://images.unsplash.com/photo-1533031024628-868ee3a40498",
-        description: "Divertimento nel cuore della città.",
-        latitude: 45.4642,
-        longitude: 9.1900
-      }
-    ];
+    try {
+      setLoading(true);
+      
+      // 1. Puntiamo alla collezione "parks" che hai creato su Firebase
+      const parksCollection = collection(db, "parks");
+      
+      // 2. Recuperiamo i documenti reali
+      const querySnapshot = await getDocs(parksCollection);
+      
+      // 3. Trasformiamo i dati di Firebase in una lista leggibile dall'app
+      const firebaseParks = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      // 4. Filtriamo in base alla ricerca (se l'utente scrive qualcosa)
+      const filtered = searchQuery 
+        ? firebaseParks.filter(p => 
+            p.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+            p.city?.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+        : firebaseParks;
+
+      // 5. Carichiamo i parchi nell'app
+      setParks(filtered);
+      
+    } catch (error) {
+      console.error('Errore nel caricamento parchi da Firebase:', error);
+      // In caso di errore, puliamo la lista per non mostrare dati vecchi
+      setParks([]);
+    } finally {
+      setLoading(false);
+    };
 
     // Filtro semplice
     const filtered = searchQuery 
