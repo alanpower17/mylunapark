@@ -90,12 +90,12 @@ const Header = ({ user, logout }) => {
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <Link to="/register" className="btn-luna text-sm" data-testid="header-register-btn">
-                    <Gift className="w-4 h-4 inline mr-1" /> Iscriviti Gratis
-                  </Link>
-                  <Link to="/login" className="nav-link text-amber-300 hover:text-amber-200" data-testid="login-btn">
-                    Accedi
-                  </Link>
+                 <Link to="/" className="flex items-center gap-4" data-testid="logo-link">
+  <img src="/logo.png" alt="MyLunaPark" className="w-14 h-14 md:w-16 md:h-16 rounded-xl shadow-lg shadow-cyan-500/20" />
+  <span className="font-bold text-2xl metallic-text hidden sm:block">
+    MyLunaPark
+  </span>
+</Link>
                 </div>
               )}
             </nav>
