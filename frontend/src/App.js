@@ -164,7 +164,7 @@ const HomePage = () => {
     getUserLocation();
   }, []);
 
-  const getUserLocation = () => {
+ const getUserLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -181,20 +181,13 @@ const HomePage = () => {
   const fetchParks = async (searchQuery = '') => {
     try {
       setLoading(true);
-      
-      // 1. Puntiamo alla collezione "parks" che hai creato su Firebase
       const parksCollection = collection(db, "parks");
-      
-      // 2. Recuperiamo i documenti reali
       const querySnapshot = await getDocs(parksCollection);
-      
-      // 3. Trasformiamo i dati di Firebase in una lista leggibile dall'app
       const firebaseParks = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
 
-      // 4. Filtriamo in base alla ricerca (se l'utente scrive qualcosa)
       const filtered = searchQuery 
         ? firebaseParks.filter(p => 
             p.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -202,29 +195,14 @@ const HomePage = () => {
           )
         : firebaseParks;
 
-      // 5. Carichiamo i parchi nell'app
       setParks(filtered);
-      
     } catch (error) {
       console.error('Errore nel caricamento parchi da Firebase:', error);
-      // In caso di errore, puliamo la lista per non mostrare dati vecchi
       setParks([]);
     } finally {
       setLoading(false);
-    };
-
-    // Filtro semplice
-    const filtered = searchQuery 
-      ? mockParks.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.city.toLowerCase().includes(searchQuery.toLowerCase()))
-      : mockParks;
-
-    setParks(filtered);
-  } catch (error) {
-    console.error('Error fetching parks:', error);
-  } finally {
-    setLoading(false);
-  }
-};
+    }
+  };
 
   const handleSearch = useCallback((e) => {
     const value = e.target.value;
