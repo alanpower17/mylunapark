@@ -57,7 +57,7 @@ const Header = ({ user, logout }) => {
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <Link to="/" className="flex items-center gap-3" data-testid="logo-link">
-              <img src="/logo.png" alt="MyLunaPark" className="w-10 h-10 rounded-lg" />
+              <img src="/logo.png" alt="MyLunaPark" className="w-16 h-16 rounded-lg" />
               <span className="font-bold text-xl metallic-text hidden sm:block">
                 MyLunaPark
               </span>
