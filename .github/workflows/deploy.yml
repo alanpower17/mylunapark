@@ -16,13 +16,28 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 22 # Usiamo una versione più nuova
-      - run: npm install --legacy-peer-deps
-      - run: CI=false npm run build # CI=false ignora i piccoli avvisi che bloccano la build
-      - uses: actions/upload-pages-artifact@v3
+          node-version: 20
+
+      - name: Clean and Install Dependencies
+        run: |
+          # Forza l'installazione delle librerie che causavano il crash
+          npm install ajv ajv-keywords --save-dev
+          # Installa tutto il resto ignorando i conflitti di versione
+          npm install --legacy-peer-deps
+
+      - name: Build project
+        run: |
+          # CI=false permette di ignorare i warning che bloccano la pubblicazione
+          CI=false npm run build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
           path: frontend/build
 
@@ -33,5 +48,6 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - id: deployment
+      - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
