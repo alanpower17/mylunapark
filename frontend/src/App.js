@@ -879,15 +879,15 @@ const CouponCard = ({ coupon, cooldownHours }) => {
   );
 };
 
-// Login Page
+// LoginPage Component
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  
   const navigate = useNavigate();
-  const auth = useAuth();
+  const auth = useAuth(); // Usa il tuo AuthContext
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -895,108 +895,93 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API}/auth/login`, { email, password });
-      auth.login(response.data, response.data.token);
+      // Usa la funzione di login del tuo AuthContext
+      await auth.login(email, password);
       
-      if (response.data.role === 'admin') {
-        navigate('/admin');
-      } else if (response.data.role === 'organizzatore') {
-        navigate('/dashboard');
-      } else {
-        navigate('/');
-      }
+      // Dopo il login, ti mandiamo alla dashboard (se sei admin/organizzatore la vedrai!)
+      navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Errore durante il login');
+      console.error("Errore di accesso:", err);
+      // Gestione errori chiara
+      if (err.code === 'auth/user-not-found') {
+        setError("Nessun account trovato con questa email.");
+      } else if (err.code === 'auth/wrong-password') {
+        setError("Password errata. Riprova.");
+      } else {
+        setError("Errore durante l'accesso. Controlla i dati e riprova.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen starry-bg flex items-center justify-center p-4">
-      <div className="ticket-card max-w-md w-full p-6 md:p-8">
+    <div className="min-h-screen starry-bg flex items-center justify-center px-4 py-12">
+      <div className="max-w-md w-full bg-[#0f1628]/80 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-8 shadow-[0_8px_32px_rgba(6,182,212,0.15)]">
+        
         <div className="text-center mb-8">
-          <img src="/logo.png" alt="MyLunaPark" className="w-16 h-16 mx-auto mb-4 rounded-xl" />
-          <h1 className="text-2xl font-bold text-cyan-400">Accedi</h1>
-          <p className="text-amber-100/70 mt-2">Entra nel mondo dei coupon</p>
+          <div className="w-16 h-16 bg-cyan-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-cyan-500/30">
+            <User className="w-8 h-8 text-cyan-400" />
+          </div>
+          <h2 className="text-3xl font-bold text-amber-400">Bentornato</h2>
+          <p className="text-amber-100/60 mt-2">Accedi per gestire il tuo Luna Park</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 text-red-300 text-sm" data-testid="login-error">
-              {error}
-            </div>
-          )}
-
-          <div>
-            <label className="block text-amber-200 text-sm mb-2">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="search-input rounded-xl"
-              placeholder="email@esempio.it"
-              required
-              data-testid="login-email-input"
-            />
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-6 text-sm text-red-400 flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            <span>{error}</span>
           </div>
+        )}
 
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-amber-200 text-sm mb-2">Password</label>
+            <label className="block text-sm font-medium text-amber-200 mb-2">Email</label>
             <div className="relative">
               <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="search-input rounded-xl pr-12"
-                placeholder="••••••••"
+                type="email"
                 required
-                data-testid="login-password-input"
+                className="w-full bg-[#1a0a2e]/50 border border-cyan-500/20 rounded-xl px-4 py-3 text-amber-100 placeholder-amber-100/30 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-colors"
+                placeholder="la-tua@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-amber-400/60"
-              >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
             </div>
           </div>
 
-          <Link to="/forgot-password" className="text-cyan-400 text-sm hover:underline block text-right" data-testid="forgot-password-link">
-            <KeyRound className="w-4 h-4 inline mr-1" /> Password dimenticata?
-          </Link>
+          <div>
+            <label className="block text-sm font-medium text-amber-200 mb-2">Password</label>
+            <div className="relative">
+              <input
+                type="password"
+                required
+                className="w-full bg-[#1a0a2e]/50 border border-cyan-500/20 rounded-xl px-4 py-3 text-amber-100 placeholder-amber-100/30 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-colors"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+          </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="btn-luna w-full mt-6"
-            data-testid="login-submit-btn"
+            className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white py-3 rounded-xl font-bold shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:shadow-[0_0_25px_rgba(6,182,212,0.6)] transition-all flex justify-center items-center"
           >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Accedi'}
+            {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Entra nel Pannello'}
           </button>
         </form>
 
-        <div className="mt-6 text-center">
-          <p className="text-amber-100/60 text-sm">
-            Non hai un account?{' '}
-            <Link to="/register" className="text-amber-400 hover:underline" data-testid="register-link">
-              Registrati
-            </Link>
-          </p>
-        </div>
-
-        {/* Demo Credentials */}
-        <div className="mt-6 p-4 bg-amber-500/10 rounded-xl border border-amber-500/30">
-          <p className="text-amber-300 text-sm font-medium mb-2">Account Demo:</p>
-          <p className="text-amber-100/70 text-xs">Admin: admin@lunapark.it / admin123</p>
-          <p className="text-amber-100/70 text-xs">Organizzatore: organizzatore@lunapark.it / org123</p>
-        </div>
+        <p className="text-center text-amber-100/60 mt-6 text-sm">
+          Non hai un account?{' '}
+          <Link to="/register" className="text-cyan-400 hover:text-cyan-300 font-bold transition-colors">
+            Iscriviti Gratis
+          </Link>
+        </p>
       </div>
     </div>
   );
 };
-
 // Register Page
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
