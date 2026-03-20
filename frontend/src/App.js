@@ -45,6 +45,7 @@ const Confetti = ({ show }) => {
 // Header Component
 const Header = ({ user, logout }) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const navigate = useNavigate();
   const location = useLocation();
 
   const isOrganizer = user?.role === 'organizzatore' || user?.role === 'admin';
@@ -52,62 +53,63 @@ const Header = ({ user, logout }) => {
 
   return (
     <header className="sticky top-0 z-40 w-full">
-      <div className="bg-gradient-to-r from-[#1a0a2e]/95 via-[#0f1628]/95 to-[#1a0a2e]/95 backdrop-blur-md border-b border-cyan-500/20">
+      {/* Effetto Glassmorphism: Sfondo semitrasparente sfocato */}
+      <div className="bg-[#0f1628]/80 backdrop-blur-xl border-b border-cyan-500/30 shadow-[0_4px_30px_rgba(6,182,212,0.1)]">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             
-            {/* LOGO UNICO (Sinistra) - Ingrandito */}
-            <Link to="/" className="flex items-center gap-3 group" data-testid="logo-link">
+            {/* Logo e Titolo - Ingranditi e con Glow */}
+            <Link to="/" className="flex items-center gap-4 group" data-testid="logo-link">
               <div className="relative">
                 <img 
-                  src="./logo.png" 
+                  src="/logo.png" 
                   alt="MyLunaPark" 
-                  className="w-20 h-20 md:w-28 md:h-28 rounded-xl shadow-lg object-contain transition-transform group-hover:scale-105" 
+                  className="w-16 h-16 md:w-20 md:h-20 rounded-xl object-contain shadow-lg transition-transform duration-300 group-hover:scale-105" 
                   onError={(e) => { e.target.src = "https://via.placeholder.com/150?text=MyLunaPark"; }}
                 />
-                <div className="absolute -inset-1 bg-cyan-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
+                <div className="absolute -inset-1 bg-cyan-500/30 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
               </div>
-              <span className="font-bold text-2xl metallic-text hidden sm:block">
+              <span className="font-extrabold text-2xl md:text-3xl metallic-text hidden sm:block tracking-tight">
                 MyLunaPark
               </span>
             </Link>
 
-            {/* Desktop Nav (Destra) */}
+            {/* Desktop Nav */}
             <nav className="hidden md:flex items-center gap-6">
-              <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`} data-testid="nav-home">
-                <Home className="w-4 h-4 inline mr-1" /> Home
+              <Link to="/" className={`nav-link text-lg font-medium hover:text-cyan-400 transition-colors ${location.pathname === '/' ? 'text-cyan-400' : 'text-amber-100'}`} data-testid="nav-home">
+                <Home className="w-5 h-5 inline mr-1" /> Home
               </Link>
               
               {isOrganizer && (
-                <Link to="/dashboard" className={`nav-link ${location.pathname.startsWith('/dashboard') ? 'active' : ''}`} data-testid="nav-dashboard">
-                  <Settings className="w-4 h-4 inline mr-1" /> Dashboard
+                <Link to="/dashboard" className={`nav-link text-lg font-medium hover:text-cyan-400 transition-colors ${location.pathname.startsWith('/dashboard') ? 'text-cyan-400' : 'text-amber-100'}`} data-testid="nav-dashboard">
+                  <Settings className="w-5 h-5 inline mr-1" /> Dashboard
                 </Link>
               )}
               
               {isAdmin && (
-                <Link to="/admin" className={`nav-link ${location.pathname.startsWith('/admin') ? 'active' : ''}`} data-testid="nav-admin">
-                  <Shield className="w-4 h-4 inline mr-1" /> Admin
+                <Link to="/admin" className={`nav-link text-lg font-medium hover:text-cyan-400 transition-colors ${location.pathname.startsWith('/admin') ? 'text-cyan-400' : 'text-amber-100'}`} data-testid="nav-admin">
+                  <Shield className="w-5 h-5 inline mr-1 text-purple-400" /> Admin
                 </Link>
               )}
 
-              <a href="https://sites.google.com/view/privacypolicymylunaparkappwebs/home-page" target="_blank" rel="noopener noreferrer" className="nav-link text-amber-200/60 hover:text-amber-200">
-                Privacy
-              </a>
-
-              {/* Sezione Utente / Login */}
-              <div className="h-8 w-[1px] bg-cyan-500/20 mx-2"></div> {/* Separatore visivo */}
+              {/* Separatore Visivo */}
+              <div className="h-8 w-px bg-cyan-500/30 mx-2"></div>
 
               {user ? (
                 <div className="flex items-center gap-4">
-                  <span className="text-amber-200 text-sm font-medium">{user.name}</span>
-                  <button onClick={logout} className="p-2 text-pink-400 hover:bg-pink-400/10 rounded-full transition-colors" title="Esci">
+                  <span className="text-amber-200 font-medium">Ciao, {user.name}</span>
+                  <button onClick={logout} className="p-2 text-pink-400 hover:bg-pink-500/10 rounded-full transition-colors" data-testid="logout-btn" title="Esci">
                     <LogOut className="w-5 h-5" />
                   </button>
                 </div>
               ) : (
                 <div className="flex items-center gap-4">
-                  <Link to="/login" className="nav-link !text-amber-400 font-bold border border-amber-400/30 px-4 py-1.5 rounded-lg hover:bg-amber-400/10">
+                  <Link to="/login" className="text-amber-300 hover:text-amber-100 font-medium transition-colors" data-testid="login-btn">
                     Accedi
+                  </Link>
+                  {/* Tasto Iscriviti Premium (Stile Neon) */}
+                  <Link to="/register" className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-2.5 rounded-full font-bold shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:shadow-[0_0_25px_rgba(6,182,212,0.6)] hover:scale-105 transition-all" data-testid="header-register-btn">
+                    <Gift className="w-4 h-4 inline mr-2" /> Iscriviti Gratis
                   </Link>
                 </div>
               )}
@@ -115,8 +117,9 @@ const Header = ({ user, logout }) => {
 
             {/* Mobile Menu Button */}
             <button 
-              className="md:hidden text-amber-400 p-2 hover:bg-amber-400/10 rounded-lg"
+              className="md:hidden text-amber-400 p-2 hover:bg-cyan-500/10 rounded-lg transition-colors"
               onClick={() => setMenuOpen(!menuOpen)}
+              data-testid="mobile-menu-btn"
             >
               {menuOpen ? <X className="w-8 h-8" /> : <Menu className="w-8 h-8" />}
             </button>
@@ -124,33 +127,33 @@ const Header = ({ user, logout }) => {
 
           {/* Mobile Nav Dropdown */}
           {menuOpen && (
-            <nav className="md:hidden mt-4 pb-4 flex flex-col gap-3 border-t border-cyan-500/10 pt-4">
-              <Link to="/" className="nav-link py-2" onClick={() => setMenuOpen(false)}>
+            <nav className="md:hidden mt-4 pb-4 flex flex-col gap-3 border-t border-cyan-500/20 pt-4">
+              <Link to="/" className="nav-link py-2 text-lg" onClick={() => setMenuOpen(false)} data-testid="mobile-nav-home">
                 <Home className="w-5 h-5 inline mr-3" /> Home
               </Link>
               {isOrganizer && (
-                <Link to="/dashboard" className="nav-link py-2" onClick={() => setMenuOpen(false)}>
+                <Link to="/dashboard" className="nav-link py-2 text-lg" onClick={() => setMenuOpen(false)} data-testid="mobile-nav-dashboard">
                   <Settings className="w-5 h-5 inline mr-3" /> Dashboard
                 </Link>
               )}
               {isAdmin && (
-                <Link to="/admin" className="nav-link py-2" onClick={() => setMenuOpen(false)}>
+                <Link to="/admin" className="nav-link py-2 text-lg" onClick={() => setMenuOpen(false)} data-testid="mobile-nav-admin">
                   <Shield className="w-5 h-5 inline mr-3" /> Admin
                 </Link>
               )}
               {user ? (
-                <button onClick={() => { logout(); setMenuOpen(false); }} className="nav-link py-2 text-left text-pink-400">
+                <button onClick={() => { logout(); setMenuOpen(false); }} className="nav-link py-2 text-left text-lg text-pink-400" data-testid="mobile-logout-btn">
                   <LogOut className="w-5 h-5 inline mr-3" /> Esci ({user.name})
                 </button>
               ) : (
-                <>
-                  <Link to="/register" className="nav-link py-2 text-amber-400 font-bold" onClick={() => setMenuOpen(false)}>
-                    <Gift className="w-5 h-5 inline mr-3" /> Iscriviti Gratis
+                <div className="flex flex-col gap-3 mt-2">
+                  <Link to="/register" className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-center py-3 rounded-xl font-bold shadow-lg" onClick={() => setMenuOpen(false)} data-testid="mobile-register-link">
+                    <Gift className="w-5 h-5 inline mr-2" /> Iscriviti Gratis
                   </Link>
-                  <Link to="/login" className="nav-link py-2" onClick={() => setMenuOpen(false)}>
-                    <User className="w-5 h-5 inline mr-3" /> Accedi
+                  <Link to="/login" className="border border-amber-400/50 text-amber-300 text-center py-3 rounded-xl font-bold" onClick={() => setMenuOpen(false)} data-testid="mobile-login-link">
+                    <User className="w-5 h-5 inline mr-2" /> Accedi
                   </Link>
-                </>
+                </div>
               )}
             </nav>
           )}
