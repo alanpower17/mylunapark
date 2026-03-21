@@ -2617,6 +2617,19 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
+  <HashRouter>
+    <Header user={user} logout={logout} />
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route path="/park/:parkId" element={<ParkDetailPage />} />
+      <Route path="/login" element={<LoginPage />} /> {/* Assicurati che LoginPage sia importata */}
+      
+      {/* AGGIUNGI QUESTE DUE RIGHE */}
+      <Route path="/dashboard" element={<Dashboard />} /> 
+      <Route path="/admin" element={<AdminPanel />} />
+    </Routes>
+  </HashRouter>
+</AuthProvider>
       <AppContent />
     </AuthProvider>
   );
