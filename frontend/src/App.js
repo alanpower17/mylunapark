@@ -1448,21 +1448,42 @@ const ParkManagementPage = () => {
     }
   };
 
-  const handleSavePark = async (e) => {
+ const handleSavePark = async (e) => {
     e.preventDefault();
     setSaving(true);
     setError('');
 
     try {
+      // 1. Pulizia dati: assicuriamoci che i numeri siano numeri e non stringhe
+      const payload = {
+        ...formData,
+        coupon_cooldown_hours: parseInt(formData.coupon_cooldown_hours) || 24
+      };
+
       if (isNew) {
-        const response = await axios.post(`${API}/lunaparks`, formData, { headers: auth.getAuthHeaders() });
-        navigate(`/dashboard/park/${response.data.id}`);
+        // CREAZIONE: Invio i dati al server
+        const response = await axios.post(`${API}/lunaparks`, payload, { 
+          headers: auth.getAuthHeaders() 
+        });
+        
+        // Se il salvataggio va a buon fine, il server ci dà l'ID del nuovo parco
+        if (response.data && response.data.id) {
+          alert("Luna Park creato! Ora attendi l'approvazione dell'Admin.");
+          navigate('/dashboard'); // Torniamo alla lista
+        }
       } else {
-        await axios.put(`${API}/lunaparks/${parkId}`, formData, { headers: auth.getAuthHeaders() });
-        fetchParkData();
+        // MODIFICA: Aggiorno il parco esistente
+        await axios.put(`${API}/lunaparks/${parkId}`, payload, { 
+          headers: auth.getAuthHeaders() 
+        });
+        alert("Modifiche salvate correttamente!");
+        fetchParkData(); // Ricarichiamo i dati aggiornati
       }
     } catch (err) {
-      setError(err.response?.data?.detail || 'Errore durante il salvataggio');
+      console.error('Errore dettagliato:', err.response?.data);
+      // Mostriamo il messaggio d'errore preciso che arriva dal server
+      const errorMessage = err.response?.data?.detail || 'Errore durante il salvataggio';
+      setError(Array.isArray(errorMessage) ? "Controlla i campi obbligatori" : errorMessage);
     } finally {
       setSaving(false);
     }
