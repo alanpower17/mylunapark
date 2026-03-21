@@ -2623,7 +2623,9 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <Router>
+        <AuthContent />
+      </Router>
     </AuthProvider>
   );
 }
