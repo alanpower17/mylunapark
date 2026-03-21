@@ -2628,4 +2628,47 @@ function App() {
   );
 }
 
+function AuthContent() {
+  const { user, logout, getAuthHeaders } = useAuth();
+
+  return (
+    <>
+      {/* Il tuo Header/Navbar */}
+      <Header user={user} logout={logout} />
+      
+      <Routes>
+        {/* Pagine Pubbliche */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/park/:parkId" element={<ParkDetailPage />} />
+        
+        {/* Pagina Login/Register (se non sei loggato) */}
+        {!user && (
+          <>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+          </>
+        )}
+
+        {/* Dashboard: Accessibile sia a te (Admin) che agli Organizzatori */}
+        <Route path="/dashboard" element={<DashboardPage />} />
+        
+        {/* Pannello Admin: Accessibile SOLO a te */}
+        <Route path="/admin" element={<AdminPage />} />
+
+        {/* Gestione Parco Singolo (dalla dashboard) */}
+        <Route path="/dashboard/park/:parkId" element={<ParkEditPage />} />
+        <Route path="/dashboard/park/new" element={<NewParkPage />} />
+
+        {/* Se l'utente scrive una rotta che non esiste */}
+        <Route path="*" element={
+          <div className="text-white p-20 text-center">
+            <h2 className="text-2xl">Attrazione chiusa! (Errore 404)</h2>
+            <p className="mt-4">Questa pagina non esiste nel nostro Luna Park.</p>
+          </div>
+        } />
+      </Routes>
+    </>
+  );
+}
+
 export default App;
