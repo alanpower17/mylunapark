@@ -1,4 +1,3 @@
-frontend/src/App.js
 import { useState, useEffect, useCallback, useRef } from "react";
 import "./App.css";
 import { HashRouter, Routes, Route, Link, useNavigate, useParams, useLocation } from "react-router-dom";
@@ -2618,20 +2617,9 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-  <HashRouter>
-    <Header user={user} logout={logout} />
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/park/:parkId" element={<ParkDetailPage />} />
-      <Route path="/login" element={<LoginPage />} /> {/* Assicurati che LoginPage sia importata */}
-      
-      {/* AGGIUNGI QUESTE DUE RIGHE */}
-      <Route path="/dashboard" element={<Dashboard />} /> 
-      <Route path="/admin" element={<AdminPanel />} />
-    </Routes>
-  </HashRouter>
-</AuthProvider>
-<AppContent />
-   
+      <AppContent />
+    </AuthProvider>
   );
 }
+
+export default App;
