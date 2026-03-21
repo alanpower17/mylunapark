@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   // IL TUO UID DA AMMINISTRATORE
-  const ADMIN_UID = "h6XixRWQ8vXizjJXxApwZhk8vxm1";
+  const ADMIN_UID = "SpsrAyESGAM9ups61kfjUbEDKn72";
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
