@@ -829,8 +829,13 @@ function AuthContent() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/park/:parkId" element={<ParkDetailPage />} />
-        {/* Se avevi altre pagine come Login, inseriscile qui sotto */}
+        
+        {/* ECCO LE ROTTE RIATTIVATE */}
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/admin" element={<Admin />} />
         {/* <Route path="/login" element={<Login />} /> */}
+        {/* <Route path="/register" element={<Register />} /> */}
+        
         <Route path="*" element={<div className="text-white p-20 text-center text-2xl">Errore 404 - Pagina non trovata</div>} />
       </Routes>
     </>
