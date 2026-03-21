@@ -2612,6 +2612,7 @@ function AppContent() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/dashboard/park/new" element={<ParkManagementPage />} />
           <Route path="/dashboard/park/:parkId" element={<ParkManagementPage />} />
           <Route path="/admin" element={<AdminPage />} />
         </Routes>
