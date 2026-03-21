@@ -2630,8 +2630,7 @@ function App() {
     </Routes>
   </HashRouter>
 </AuthProvider>
-      <AppContent />
-    </AuthProvider>
+   
   );
 }
 
