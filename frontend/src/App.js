@@ -1246,10 +1246,16 @@ const DashboardPage = () => {
                     {park.status === 'approved' ? 'Approvato' : park.status === 'pending' ? 'In attesa' : 'Rifiutato'}
                   </span>
                 </div>
-               <div className="flex gap-2">
-  <Link to={`/dashboard/park/${park.id}`} className="btn-luna text-sm" data-testid={`manage-park-${park.id}`}>
-    <Settings className="w-4 h-4" />
-  </Link>
+              <div className="flex gap-2">
+  {park.status === 'approved' ? (
+    <Link to={`/dashboard/park/${park.id}`} className="btn-luna text-sm">
+      <Settings className="w-4 h-4 mr-1" /> Gestisci
+    </Link>
+  ) : (
+    <button disabled className="bg-gray-700/50 text-gray-500 cursor-not-allowed px-3 py-1.5 rounded-lg text-sm flex items-center">
+      <Lock className="w-4 h-4 mr-1" /> In attesa
+    </button>
+  )}
 </div>
               </div>
             ))}
