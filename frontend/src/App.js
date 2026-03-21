@@ -1246,11 +1246,11 @@ const DashboardPage = () => {
                     {park.status === 'approved' ? 'Approvato' : park.status === 'pending' ? 'In attesa' : 'Rifiutato'}
                   </span>
                 </div>
-                <div className="flex gap-2">
-                  <Link to={`/dashboard/park/${park.id}`} className="btn-luna text-sm" data-testid={`manage-park-${park.id}`}>
-                    <Settings className="w-4 h-4" />
-                  </Link>
-                </div>
+               <div className="flex gap-2">
+  <Link to={`/dashboard/park/${park.id}`} className="btn-luna text-sm" data-testid={`manage-park-${park.id}`}>
+    <Settings className="w-4 h-4" />
+  </Link>
+</div>
               </div>
             ))}
           </div>
