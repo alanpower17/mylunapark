@@ -1427,6 +1427,16 @@ const ParkManagementPage = () => {
         axios.get(`${API}/lunaparks/${parkId}/rides`, { headers: auth.getAuthHeaders() }),
         axios.get(`${API}/lunaparks/${parkId}/coupons`, { params: { active_only: false }, headers: auth.getAuthHeaders() })
       ]);
+      // --- INIZIO CONTROLLO SICUREZZA ---
+    const park = parkRes.data;
+    // Se NON sei admin E il parco non ti appartiene, ti rimandiamo indietro
+    // Nota: verifica se il database usa 'user_id' o 'owner_id'
+    if (auth.user.role !== 'admin' && park.user_id !== auth.user.id) {
+      alert("Accesso negato: non puoi gestire questo Luna Park.");
+      navigate('/dashboard');
+      return; 
+    }
+    // --- FINE CONTROLLO SICUREZZA ---
       setPark(parkRes.data);
       setFormData(parkRes.data);
       setRides(ridesRes.data);
