@@ -3,7 +3,7 @@ import "./App.css";
 import { HashRouter, Routes, Route, Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import axios from "axios";
 import { db } from "./firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, addDoc, doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { Search, MapPin, Ticket, Clock, ChevronRight, User, LogOut, Settings, Home, Star, Menu, X, Check, AlertCircle, Loader2, Aperture, Shield, Building2, Gift, Users, BarChart3, Plus, Edit, Trash2, Eye, EyeOff, Upload, Camera, Image, Calendar, Heart, Facebook, Instagram, Info, PartyPopper, ExternalLink, KeyRound, FileSpreadsheet, Copy, Download } from "lucide-react";
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { API } from './utils/constants';
@@ -1454,36 +1454,36 @@ const ParkManagementPage = () => {
     setError('');
 
     try {
-      // 1. Pulizia dati: assicuriamoci che i numeri siano numeri e non stringhe
-      const payload = {
+      // Prepariamo i dati per Firebase
+      const parkData = {
         ...formData,
-        coupon_cooldown_hours: parseInt(formData.coupon_cooldown_hours) || 24
+        updatedAt: serverTimestamp(),
+        organizerId: auth.user.uid, // Colleghiamo l'utente attuale come proprietario
+        status: isNew ? 'pending' : (park?.status || 'pending'),
+        // Assicuriamoci che i numeri siano salvati come numeri
+        coupon_cooldown_hours: Number(formData.coupon_cooldown_hours) || 24
       };
 
       if (isNew) {
-        // CREAZIONE: Invio i dati al server
-        const response = await axios.post(`${API}/lunaparks`, payload, { 
-          headers: auth.getAuthHeaders() 
+        // --- SALVATAGGIO SU FIREBASE (Nuovo Parco) ---
+        const docRef = await addDoc(collection(db, "lunaparks"), {
+          ...parkData,
+          createdAt: serverTimestamp(),
         });
         
-        // Se il salvataggio va a buon fine, il server ci dà l'ID del nuovo parco
-        if (response.data && response.data.id) {
-          alert("Luna Park creato! Ora attendi l'approvazione dell'Admin.");
-          navigate('/dashboard'); // Torniamo alla lista
-        }
+        alert("Luna Park inviato con successo! Sarà visibile dopo l'approvazione dell'Admin.");
+        navigate('/dashboard');
       } else {
-        // MODIFICA: Aggiorno il parco esistente
-        await axios.put(`${API}/lunaparks/${parkId}`, payload, { 
-          headers: auth.getAuthHeaders() 
-        });
-        alert("Modifiche salvate correttamente!");
-        fetchParkData(); // Ricarichiamo i dati aggiornati
+        // --- AGGIORNAMENTO SU FIREBASE (Parco Esistente) ---
+        const parkRef = doc(db, "lunaparks", parkId);
+        await updateDoc(parkRef, parkData);
+        
+        alert("Modifiche salvate!");
+        fetchParkData(); // Ricarica i dati per aggiornare la pagina
       }
     } catch (err) {
-      console.error('Errore dettagliato:', err.response?.data);
-      // Mostriamo il messaggio d'errore preciso che arriva dal server
-      const errorMessage = err.response?.data?.detail || 'Errore durante il salvataggio';
-      setError(Array.isArray(errorMessage) ? "Controlla i campi obbligatori" : errorMessage);
+      console.error("Errore durante il salvataggio Firebase:", err);
+      setError("Errore Firebase: " + err.message);
     } finally {
       setSaving(false);
     }
