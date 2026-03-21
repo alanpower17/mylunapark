@@ -50,6 +50,7 @@ const Header = ({ user, logout }) => {
 
   const isOrganizer = user?.role === 'organizzatore' || user?.role === 'admin';
   const isAdmin = user?.role === 'admin';
+  console.log("Dati utente attuale:", user); // Questo ci dirà cosa vede l'app
 
   return (
     <header className="sticky top-0 z-40 w-full">
