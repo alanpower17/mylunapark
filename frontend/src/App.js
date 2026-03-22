@@ -1420,33 +1420,42 @@ const ParkManagementPage = () => {
     }
   }, [parkId]);
 
-  const fetchParkData = async () => {
-    try {
-      const [parkRes, ridesRes, couponsRes] = await Promise.all([
-        axios.get(`${API}/lunaparks/${parkId}`, { headers: auth.getAuthHeaders() }),
-        axios.get(`${API}/lunaparks/${parkId}/rides`, { headers: auth.getAuthHeaders() }),
-        axios.get(`${API}/lunaparks/${parkId}/coupons`, { params: { active_only: false }, headers: auth.getAuthHeaders() })
-      ]);
-      // --- INIZIO CONTROLLO SICUREZZA ---
-    const park = parkRes.data;
-    // Se NON sei admin E il parco non ti appartiene, ti rimandiamo indietro
-    // Nota: verifica se il database usa 'user_id' o 'owner_id'
-    if (auth.user.role !== 'admin' && park.user_id !== auth.user.id) {
-      alert("Accesso negato: non puoi gestire questo Luna Park.");
+ const fetchParkData = async () => {
+  setLoading(true);
+  try {
+    // 1. Recupera i dati del Luna Park
+    const parkRef = doc(db, "lunaparks", parkId);
+    const parkSnap = await getDoc(parkRef);
+
+    if (parkSnap.exists()) {
+      const parkData = { id: parkSnap.id, ...parkSnap.data() };
+
+      // --- CONTROLLO SICUREZZA CLIENT-SIDE ---
+      // Se non sei admin e non sei il proprietario, torna in dashboard
+      if (auth.user.role !== 'admin' && parkData.organizerId !== auth.user.uid) {
+        alert("Accesso negato.");
+        navigate('/dashboard');
+        return;
+      }
+
+      setPark(parkData);
+      setFormData(parkData);
+
+      // 2. Recupera le Giostre collegate a questo parco
+      const ridesQuery = query(collection(db, "rides"), where("parkId", "==", parkId));
+      const ridesSnap = await getDocs(ridesQuery);
+      setRides(ridesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      
+    } else {
+      console.error("Luna Park non trovato");
       navigate('/dashboard');
-      return; 
     }
-    // --- FINE CONTROLLO SICUREZZA ---
-      setPark(parkRes.data);
-      setFormData(parkRes.data);
-      setRides(ridesRes.data);
-      setCoupons(couponsRes.data);
-    } catch (error) {
-      console.error('Error fetching park:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  } catch (error) {
+    console.error("Errore nel caricamento Firebase:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
  const handleSavePark = async (e) => {
     e.preventDefault();
