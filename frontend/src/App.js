@@ -1458,38 +1458,48 @@ const ParkManagementPage = () => {
 };
 
  const handleSavePark = async (e) => {
-    e.preventDefault();
-    setSaving(true);
-    setError('');
+  e.preventDefault();
+  setSaving(true);
+  setError('');
 
-    try {
-      // Prepariamo i dati per Firebase
-      const parkData = {
-        ...formData,
-        updatedAt: serverTimestamp(),
-        organizerId: auth.user.uid, // Colleghiamo l'utente attuale come proprietario
-        status: isNew ? 'pending' : (park?.status || 'pending'),
-        // Assicuriamoci che i numeri siano salvati come numeri
-        coupon_cooldown_hours: Number(formData.coupon_cooldown_hours) || 24
-      };
+  try {
+    // PULIZIA DATI: Trasformiamo ogni undefined in stringa vuota o numero
+    const cleanData = {
+      name: formData.name || '',
+      city: formData.city || '',
+      address: formData.address || '',
+      region: formData.region || '',
+      description: formData.description || '',
+      image_url: formData.image_url || '',
+      opening_date: formData.opening_date || '',
+      closing_date: formData.closing_date || '',
+      phone: formData.phone || '',
+      opening_hours: formData.opening_hours || '',
+      coupon_cooldown_hours: Number(formData.coupon_cooldown_hours) || 24,
+      facebook_url: formData.facebook_url || '',
+      instagram_url: formData.instagram_url || '',
+      about_us: formData.about_us || '',
+      events: formData.events || '',
+      organizerId: auth.user.uid, // Assicurati che auth.user esista!
+      status: isNew ? 'pending' : (park?.status || 'pending'),
+      updatedAt: serverTimestamp()
+    };
 
-      if (isNew) {
-        // --- SALVATAGGIO SU FIREBASE (Nuovo Parco) ---
-        const docRef = await addDoc(collection(db, "lunaparks"), {
-          ...parkData,
-          createdAt: serverTimestamp(),
-        });
-        
-        alert("Luna Park inviato con successo! Sarà visibile dopo l'approvazione dell'Admin.");
-        navigate('/dashboard');
-      } else {
-        // --- AGGIORNAMENTO SU FIREBASE (Parco Esistente) ---
-        const parkRef = doc(db, "lunaparks", parkId);
-        await updateDoc(parkRef, parkData);
-        
-        alert("Modifiche salvate!");
-        fetchParkData(); // Ricarica i dati per aggiornare la pagina
-      }
+    if (isNew) {
+      // Usa cleanData invece di formData
+      const docRef = await addDoc(collection(db, "lunaparks"), {
+        ...cleanData,
+        createdAt: serverTimestamp(),
+      });
+      alert("Creato con successo!");
+      navigate('/dashboard');
+    } else {
+      const parkRef = doc(db, "lunaparks", parkId);
+      await updateDoc(parkRef, cleanData);
+      alert("Modificato!");
+      fetchParkData();
+    }
+// ... resto del catch
     } catch (err) {
       console.error("Errore durante il salvataggio Firebase:", err);
       setError("Errore Firebase: " + err.message);
