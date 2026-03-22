@@ -2699,7 +2699,7 @@ function AuthContent() {
         <Route path="/admin" element={<AdminPage />} />
 
         {/* Gestione Parco Singolo (dalla dashboard) */}
-        <Route path="/dashboard/park/:parkId" element={<ParkEditPage />} />
+        <Route path="/dashboard/park/:parkId" element={<ParkManagementPage />} />
         <Route path="/dashboard/park/new" element={<NewParkPage />} />
 
         {/* Se l'utente scrive una rotta che non esiste */}
