@@ -2664,7 +2664,7 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <HashRouter>
         <AuthContent />
       </Router>
     </AuthProvider>
