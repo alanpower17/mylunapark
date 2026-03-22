@@ -1420,8 +1420,40 @@ const ParkManagementPage = () => {
     }
   }, [parkId]);
 
- const fetchParkData = async () => {
+const fetchParkData = async () => {
+  // 1. Controllo immediato: se l'ID è 'new', non andare su Firebase!
+  if (!parkId || parkId === 'new') {
+    setIsNew(true);      // Diciamo all'app che stiamo creando
+    setLoading(false);   // Fermiamo il caricamento
+    return;              // ESCI DALLA FUNZIONE (Importante!)
+  }
+
+  // 2. Se arriviamo qui, l'ID esiste, quindi carichiamo i dati
   setLoading(true);
+  try {
+    const parkRef = doc(db, "lunaparks", parkId);
+    const parkSnap = await getDoc(parkRef);
+
+    if (parkSnap.exists()) {
+      const data = { id: parkSnap.id, ...parkSnap.data() };
+      setPark(data);
+      setFormData(data);
+    } else {
+      setError("Luna Park non trovato.");
+      navigate('/dashboard');
+    }
+  } catch (err) {
+    console.error("Errore nel caricamento Firebase:", err);
+    setError("Impossibile caricare i dati del parco.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+  setLoading(true);
+  try {
+    const parkRef = doc(db, "lunaparks", parkId);
+    const parkSnap = await getDoc(parkRef);
   try {
     // 1. Recupera i dati del Luna Park
     const parkRef = doc(db, "lunaparks", parkId);
