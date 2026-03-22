@@ -1421,9 +1421,17 @@ const ParkManagementPage = () => {
   }, [parkId]);
 
  const fetchParkData = async () => {
+  // --- 1. CONTROLLO SALVAVITA: Se è un nuovo parco, fermati qui! ---
+  if (!parkId || parkId === 'new') {
+    setIsNew(true);      // Diciamo al sistema che stiamo creando
+    setLoading(false);   // Togliamo la rotellina di caricamento
+    return;              // ESCI SUBITO per non far crashare Firebase
+  }
+  // -----------------------------------------------------------------
+
   setLoading(true);
   try {
-    // 1. Recupera i dati del Luna Park
+    // 2. Recupera i dati del Luna Park ESISTENTE
     const parkRef = doc(db, "lunaparks", parkId);
     const parkSnap = await getDoc(parkRef);
 
@@ -1441,7 +1449,7 @@ const ParkManagementPage = () => {
       setPark(parkData);
       setFormData(parkData);
 
-      // 2. Recupera le Giostre collegate a questo parco
+      // 3. Recupera le Giostre collegate a questo parco
       const ridesQuery = query(collection(db, "rides"), where("parkId", "==", parkId));
       const ridesSnap = await getDocs(ridesQuery);
       setRides(ridesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
@@ -1456,7 +1464,6 @@ const ParkManagementPage = () => {
     setLoading(false);
   }
 };
-
  const handleSavePark = async (e) => {
   e.preventDefault();
   setSaving(true);
