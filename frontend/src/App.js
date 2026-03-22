@@ -3,7 +3,7 @@ import "./App.css";
 import { HashRouter, Routes, Route, Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import axios from "axios";
 import { db } from "./firebase";
-import { collection, getDocs, addDoc, doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import {  collection,  getDocs,  getDoc,  doc,  query,  where,  addDoc,  updateDoc,  serverTimestamp } from "firebase/firestore";
 import { Search, MapPin, Ticket, Clock, ChevronRight, User, LogOut, Settings, Home, Star, Menu, X, Check, AlertCircle, Loader2, Aperture, Shield, Building2, Gift, Users, BarChart3, Plus, Edit, Trash2, Eye, EyeOff, Upload, Camera, Image, Calendar, Heart, Facebook, Instagram, Info, PartyPopper, ExternalLink, KeyRound, FileSpreadsheet, Copy, Download } from "lucide-react";
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { API } from './utils/constants';
