@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import "./App.css";
-import { HashRouter, Routes, Route, Link, useNavigate, useParams, useLocation } from "react-router-dom";
+import { HashRouter as Router, Routes, Route, Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import axios from "axios";
 import { db } from "./firebase";
 import {  collection,  getDocs,  getDoc,  doc,  query,  where,  addDoc,  updateDoc,  serverTimestamp } from "firebase/firestore";
@@ -2664,7 +2664,7 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <HashRouter>
+      <Router>
         <AuthContent />
       </Router>
     </AuthProvider>
