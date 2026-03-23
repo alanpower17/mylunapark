@@ -414,7 +414,9 @@ const ParkCard = ({ park, userLocation }) => {
 // Park Detail Page
 const ParkDetailPage = () => {
   const { parkId } = useParams();
-  const navigate = useNavigate(); // Fondamentale: deve essere definito qui!
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  
   const [park, setPark] = useState(null);
   const [coupons, setCoupons] = useState([]);
   const [search, setSearch] = useState('');
@@ -422,33 +424,82 @@ const ParkDetailPage = () => {
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showEventsModal, setShowEventsModal] = useState(false);
 
+  // 1. Funzione per recuperare i dati (unica)
+  const fetchParkData = useCallback(async () => {
+    if (parkId === 'new') {
+      navigate('/');
+      return;
+    }
+    try {
+      setLoading(true);
+      const parkRef = doc(db, "parks", parkId);
+      const parkSnap = await getDoc(parkRef);
+      
+      if (parkSnap.exists()) {
+        setPark({ id: parkSnap.id, ...parkSnap.data() });
+        const couponsRef = collection(db, "coupons");
+        const q = query(couponsRef, where("parkId", "==", parkId));
+        const querySnapshot = await getDocs(q);
+        setCoupons(querySnapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+      }
+    } catch (error) {
+      console.error('Errore:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [parkId, navigate]);
+
+  // 2. Trigger del caricamento
+  useEffect(() => {
+    fetchParkData();
+  }, [fetchParkData]);
+
+  // 3. Funzioni Admin
+  const handleApprove = async (id) => {
+    if (!window.confirm("Approvare questo parco?")) return;
+    try {
+      await updateDoc(doc(db, "parks", id), { status: 'approved' });
+      fetchParkData();
+    } catch (e) { alert("Errore"); }
+  };
+
+  const filteredCoupons = coupons.filter(c => 
+    c.ride_name?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="spinner-luna"></div></div>;
+  if (!park) return <div className="min-h-screen flex items-center justify-center text-amber-200">Parco non trovato</div>;
+
   return (
-    <div className="min-h-screen starry-bg p-4">
-      <div className="max-w-4xl mx-auto">
-        
-        {/* --- SEZIONE ADMIN: AZIONI RAPIDE --- */}
-        {user?.role === 'admin' && park?.status === 'pending' && (
-          <div className="bg-purple-900/40 border border-purple-500/50 p-4 rounded-2xl mb-6 flex items-center justify-between">
-            <div>
-              <p className="text-purple-200 font-bold">Richiesta di Approvazione</p>
-              <p className="text-purple-200/60 text-sm">Questo parco non è ancora visibile al pubblico.</p>
-            </div>
-            <div className="flex gap-2">
-              <button 
-                onClick={() => handleApprove(park.id)} 
-                className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all"
-              >
-                Approva
-              </button>
-              <button 
-                onClick={() => handleReject(park.id)} 
-                className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all"
-              >
-                Rifiuta
-              </button>
-            </div>
-          </div>
-        )}
+    <div className="min-h-screen starry-bg pb-8">
+      {/* Banner Admin */}
+      {user?.role === 'admin' && park.status === 'pending' && (
+        <div className="max-w-4xl mx-auto p-4 mb-4 bg-purple-900/50 border border-purple-500 rounded-xl flex justify-between items-center">
+          <span className="text-purple-200 font-bold">Richiesta Pendente</span>
+          <button onClick={() => handleApprove(park.id)} className="bg-green-600 px-4 py-2 rounded-lg text-white text-sm font-bold">Approva Ora</button>
+        </div>
+      )}
+
+      {/* Header Immagine */}
+      <div className="relative h-64 bg-gray-900">
+        {park.image_url && <img src={park.image_url} alt={park.name} className="w-full h-full object-cover opacity-50" />}
+        <div className="absolute bottom-6 left-6">
+          <h1 className="text-4xl font-black text-amber-400 uppercase">{park.name}</h1>
+          <p className="text-cyan-400 flex items-center gap-1"><MapPin className="w-4 h-4"/> {park.city}</p>
+        </div>
+      </div>
+
+      {/* Lista Coupon */}
+      <div className="max-w-4xl mx-auto px-4 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filteredCoupons.map(coupon => (
+            <CouponCard key={coupon.id} coupon={coupon} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
         {/* --- HEADER DEL PARCO --- */}
         <div className="flex flex-col md:flex-row gap-6 mb-8">
