@@ -420,6 +420,12 @@ const ParkDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showEventsModal, setShowEventsModal] = useState(false);
+  const fetchParkData = async () => {
+  // Se per errore qualcuno finisce qui con "new", rimandalo alla home
+  if (parkId === 'new') {
+    navigate('/');
+    return;
+  }
 
   useEffect(() => {
     fetchParkDetails();
@@ -695,7 +701,7 @@ const CouponCard = ({ coupon, cooldownHours }) => {
       console.error('Error checking availability:', error);
     }
   };
-
+ 
   const handleUseNow = () => {
     setShowModal(true);
     setUseResult(null);
@@ -1420,15 +1426,12 @@ const ParkManagementPage = () => {
     }
   }, [parkId]);
 
- const fetchParkData = async () => {
-  // --- 1. CONTROLLO SALVAVITA: Se è un nuovo parco, fermati qui! ---
-  if (!parkId || parkId === 'new') {
-   
-    setLoading(false);   // Togliamo la rotellina di caricamento
-    return;              // ESCI SUBITO per non far crashare Firebase
+const fetchParkData = async () => {
+  if (isNew) { // Usiamo la variabile che abbiamo appena creato
+    setLoading(false);
+    return; 
   }
-  // -----------------------------------------------------------------
-
+  
   setLoading(true);
   try {
     // 2. Recupera i dati del Luna Park ESISTENTE
