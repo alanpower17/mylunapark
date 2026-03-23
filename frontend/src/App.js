@@ -1,11 +1,10 @@
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import "./App.css";
 import { HashRouter as Router, Routes, Route, Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import axios from "axios";
 import { db } from "./firebase";
 import {  collection,  getDocs,  getDoc,  doc,  query,  where,  addDoc,  updateDoc,  serverTimestamp } from "firebase/firestore";
-import { Search, MapPin, Ticket, Clock, ChevronRight, User, LogOut, Settings, Home, Star, Menu, X, Check, AlertCircle, Loader2, Aperture, Shield, Building2, Gift, Users, BarChart3, Plus, Edit, Trash2, Eye, EyeOff, Upload, Camera, Image, Calendar, Heart, Facebook, Instagram, Info, PartyPopper, ExternalLink, KeyRound, FileSpreadsheet, Copy, Download, Lock } from "lucide-react";
+import { Search, MapPin, Ticket, Clock, ChevronRight, User, LogOut, Settings, Home, Star, Menu, X, Check, AlertCircle, Loader2, Aperture, Shield, Building2, Gift, Users, BarChart3, Plus, Edit, Trash2, Eye, EyeOff, Upload, Camera, Image, Calendar, Heart, Facebook, Instagram, Info, PartyPopper, ExternalLink, KeyRound, FileSpreadsheet, Copy, Download } from "lucide-react";
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { API } from './utils/constants';
 import { getDeviceId, calculateDistance } from './utils/utils';
@@ -51,14 +50,16 @@ const Header = ({ user, logout }) => {
 
   const isOrganizer = user?.role === 'organizzatore' || user?.role === 'admin';
   const isAdmin = user?.role === 'admin';
-  console.log("Dati utente attuale:", user);
+  console.log("Dati utente attuale:", user); // Questo ci dirà cosa vede l'app
 
   return (
     <header className="sticky top-0 z-40 w-full">
+      {/* Effetto Glassmorphism: Sfondo semitrasparente sfocato */}
       <div className="bg-[#0f1628]/80 backdrop-blur-xl border-b border-cyan-500/30 shadow-[0_4px_30px_rgba(6,182,212,0.1)]">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             
+            {/* Logo e Titolo - Ingranditi e con Glow */}
             <Link to="/" className="flex items-center gap-4 group" data-testid="logo-link">
               <div className="relative">
                 <img 
@@ -74,6 +75,7 @@ const Header = ({ user, logout }) => {
               </span>
             </Link>
 
+            {/* Desktop Nav */}
             <nav className="hidden md:flex items-center gap-6">
               <Link to="/" className={`nav-link text-lg font-medium hover:text-cyan-400 transition-colors ${location.pathname === '/' ? 'text-cyan-400' : 'text-amber-100'}`} data-testid="nav-home">
                 <Home className="w-5 h-5 inline mr-1" /> Home
@@ -91,6 +93,7 @@ const Header = ({ user, logout }) => {
                 </Link>
               )}
 
+              {/* Separatore Visivo */}
               <div className="h-8 w-px bg-cyan-500/30 mx-2"></div>
 
               {user ? (
@@ -105,6 +108,7 @@ const Header = ({ user, logout }) => {
                   <Link to="/login" className="text-amber-300 hover:text-amber-100 font-medium transition-colors" data-testid="login-btn">
                     Accedi
                   </Link>
+                  {/* Tasto Iscriviti Premium (Stile Neon) */}
                   <Link to="/register" className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-2.5 rounded-full font-bold shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:shadow-[0_0_25px_rgba(6,182,212,0.6)] hover:scale-105 transition-all" data-testid="header-register-btn">
                     <Gift className="w-4 h-4 inline mr-2" /> Iscriviti Gratis
                   </Link>
@@ -112,6 +116,7 @@ const Header = ({ user, logout }) => {
               )}
             </nav>
 
+            {/* Mobile Menu Button */}
             <button 
               className="md:hidden text-amber-400 p-2 hover:bg-cyan-500/10 rounded-lg transition-colors"
               onClick={() => setMenuOpen(!menuOpen)}
@@ -121,6 +126,7 @@ const Header = ({ user, logout }) => {
             </button>
           </div>
 
+          {/* Mobile Nav Dropdown */}
           {menuOpen && (
             <nav className="md:hidden mt-4 pb-4 flex flex-col gap-3 border-t border-cyan-500/20 pt-4">
               <Link to="/" className="nav-link py-2 text-lg" onClick={() => setMenuOpen(false)} data-testid="mobile-nav-home">
@@ -171,7 +177,7 @@ const HomePage = () => {
     getUserLocation();
   }, []);
 
-  const getUserLocation = () => {
+ const getUserLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -220,6 +226,7 @@ const HomePage = () => {
     return () => clearTimeout(timeout);
   }, []);
 
+  // Ordina: preferiti prima, poi per distanza
   const sortedParks = [...parks].sort((a, b) => {
     const favorites = auth.user?.favorite_parks || [];
     const aFav = favorites.includes(a.id);
@@ -228,6 +235,7 @@ const HomePage = () => {
     if (aFav && !bFav) return -1;
     if (!aFav && bFav) return 1;
     
+    // Se entrambi sono preferiti o nessuno, ordina per distanza
     if (userLocation && a.latitude && b.latitude) {
       const distA = calculateDistance(userLocation.lat, userLocation.lng, a.latitude, a.longitude);
       const distB = calculateDistance(userLocation.lat, userLocation.lng, b.latitude, b.longitude);
@@ -238,6 +246,7 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen starry-bg">
+      {/* Hero Section */}
       <section className="relative py-12 md:py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <img src="/logo.png" alt="MyLunaPark" className="w-24 h-24 mx-auto mb-6 rounded-2xl" />
@@ -248,6 +257,7 @@ const HomePage = () => {
             Trova coupon e sconti per le giostre dei migliori luna park d'Italia
           </p>
 
+          {/* Search Bar */}
           <div className="relative max-w-xl mx-auto">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400/60" />
             <input
@@ -262,6 +272,7 @@ const HomePage = () => {
         </div>
       </section>
 
+      {/* Parks Grid */}
       <section className="px-4 pb-12">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-2xl font-bold text-amber-300 mb-6 flex items-center gap-2">
@@ -289,6 +300,7 @@ const HomePage = () => {
         </div>
       </section>
 
+      {/* Ad Placeholder */}
       <section className="px-4 pb-8">
         <div className="max-w-4xl mx-auto">
           <div className="ad-placeholder">
@@ -305,6 +317,17 @@ const ParkCard = ({ park, userLocation }) => {
   const auth = useAuth();
   const isFavorite = auth.user?.favorite_parks?.includes(park.id);
 
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
   const distance = userLocation && park.latitude 
     ? calculateDistance(userLocation.lat, userLocation.lng, park.latitude, park.longitude)
     : null;
@@ -319,6 +342,7 @@ const ParkCard = ({ park, userLocation }) => {
 
   return (
     <Link to={`/park/${park.id}`} className="block relative" data-testid={`park-card-${park.id}`}>
+      {/* Cuore preferiti */}
       {auth.user && (
         <button
           onClick={handleFavoriteClick}
@@ -390,47 +414,94 @@ const ParkCard = ({ park, userLocation }) => {
 // Park Detail Page
 const ParkDetailPage = () => {
   const { parkId } = useParams();
-  const navigate = useNavigate();
   const [park, setPark] = useState(null);
   const [coupons, setCoupons] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showEventsModal, setShowEventsModal] = useState(false);
+  const fetchParkData = async () => {
+  // Se per errore qualcuno finisce qui con "new", rimandalo alla home
+  if (parkId === 'new') {
+    navigate('/');
+    return;
+  }
 
   useEffect(() => {
-    if (parkId === 'new') {
-      navigate('/');
-      return;
-    }
     fetchParkDetails();
-  }, [parkId, navigate]);
+  }, [parkId]);
 
   const fetchParkDetails = async () => {
     try {
       setLoading(true);
-      const parkRef = doc(db, "parks", parkId);
-      const parkSnap = await getDoc(parkRef);
       
-      if (parkSnap.exists()) {
-        const parkData = { id: parkSnap.id, ...parkSnap.data() };
-        setPark(parkData);
 
-        const couponsRef = collection(db, "coupons");
-        const q = query(couponsRef, where("parkId", "==", parkId));
-        const querySnapshot = await getDocs(q);
-        
-        const realCoupons = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        
-        setCoupons(realCoupons);
-      } else {
-        console.log("Nessun parco trovato con questo ID");
-      }
+const fetchParkDetails = async () => {
+  try {
+    setLoading(true);
+    
+    // 1. Lettura del Parco specifico tramite l'ID dell'URL
+    const parkRef = doc(db, "parks", parkId);
+    const parkSnap = await getDoc(parkRef);
+    
+    if (parkSnap.exists()) {
+      const parkData = { id: parkSnap.id, ...parkSnap.data() };
+      setPark(parkData);
+
+      // 2. Lettura REALE dei Coupon legati a questo parco
+      // Cerchiamo nella collezione 'coupons' quelli che hanno 'parkId' uguale a quello attuale
+      const couponsRef = collection(db, "coupons");
+      const q = query(couponsRef, where("parkId", "==", parkId));
+      const querySnapshot = await getDocs(q);
+      
+      const realCoupons = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      setCoupons(realCoupons);
+    } else {
+      console.log("Nessun parco trovato con questo ID");
+    }
+
+  } catch (error) {
+    console.error('Errore Firebase:', error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+      // 2. DATI FINTI DEI COUPON (Mock Data)
+      const mockCoupons = [
+        {
+          id: 101,
+          ride_name: "Autoscontro",
+          ride_number: "12",
+          discount_description: "Sconto 1€",
+          owner_surname: "Rossi",
+          image_url: "https://images.unsplash.com/photo-1573059224875-f1404306b3e2",
+          link_url: ""
+        },
+        {
+          id: 102,
+          ride_name: "Ruota Panoramica",
+          ride_number: "5",
+          discount_description: "Prendi 2 Paghi 1",
+          owner_surname: "Bianchi",
+          image_url: "https://images.unsplash.com/photo-1506443432602-ac2fcd6f54e0",
+          link_url: ""
+        }
+      ];
+
+      // Simuliamo un caricamento di mezzo secondo per far vedere la rotellina (effetto realistico)
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Diciamo all'app di usare questi dati finti
+      setPark(mockPark);
+      setCoupons(mockCoupons);
+
     } catch (error) {
-      console.error('Errore Firebase:', error);
+      console.error('Error fetching park details:', error);
     } finally {
       setLoading(false);
     }
@@ -459,6 +530,7 @@ const ParkDetailPage = () => {
 
   return (
     <div className="min-h-screen starry-bg pb-8">
+      {/* Park Header */}
       <div className="relative h-48 md:h-64 bg-gradient-to-br from-purple-900/50 to-blue-900/50">
         {park.image_url && (
           <img src={park.image_url} alt={park.name} className="w-full h-full object-cover opacity-60" />
@@ -483,9 +555,11 @@ const ParkDetailPage = () => {
         </div>
       </div>
 
+      {/* Search & Coupons */}
       <div className="max-w-4xl mx-auto px-4 mt-6">
         {park.description && <p className="text-amber-100/70 mb-6">{park.description}</p>}
 
+        {/* Social Links & Info Buttons */}
         <div className="flex flex-wrap gap-3 mb-6">
           {park.facebook_url && (
             <a href={park.facebook_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 px-4 py-2 rounded-xl transition-colors">
@@ -509,6 +583,7 @@ const ParkDetailPage = () => {
           )}
         </div>
 
+        {/* Search */}
         <div className="relative mb-6">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400/60" />
           <input
@@ -521,6 +596,7 @@ const ParkDetailPage = () => {
           />
         </div>
 
+        {/* Cooldown Info */}
         <div className="ticket-card p-4 mb-6 flex items-center gap-3">
           <Clock className="w-6 h-6 text-cyan-400 flex-shrink-0" />
           <div>
@@ -531,6 +607,7 @@ const ParkDetailPage = () => {
           </div>
         </div>
 
+        {/* Coupons Grid */}
         <h2 className="text-xl font-bold text-amber-300 mb-4 flex items-center gap-2">
           <Ticket className="w-5 h-5" />
           Coupon disponibili ({filteredCoupons.length})
@@ -549,17 +626,20 @@ const ParkDetailPage = () => {
           </div>
         )}
 
+        {/* Disclaimer */}
         {filteredCoupons.length > 0 && (
           <div className="mt-8 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-200/70 text-xs">
             I gestori si riservano il diritto di non accettare i coupon in caso di palese abuso, malfunzionamento tecnico del dispositivo o comportamenti non idonei. Lo sconto non è cumulabile con altre promozioni. La disponibilità delle promozioni è soggetta agli orari e alle condizioni di apertura.
           </div>
         )}
 
+        {/* Ad Placeholder */}
         <div className="ad-placeholder mt-8">
           <p>Spazio pubblicitario</p>
         </div>
       </div>
 
+      {/* Chi Siamo Modal */}
       {showAboutModal && park.about_us && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="ticket-card max-w-lg w-full p-6 max-h-[80vh] overflow-y-auto">
@@ -576,6 +656,7 @@ const ParkDetailPage = () => {
         </div>
       )}
 
+      {/* Eventi Modal */}
       {showEventsModal && park.events && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="ticket-card max-w-lg w-full p-6 max-h-[80vh] overflow-y-auto">
@@ -653,6 +734,7 @@ const CouponCard = ({ coupon, cooldownHours }) => {
       <Confetti show={showConfetti} />
       
       <div className={`ticket-card luna-card overflow-hidden ${useResult?.success ? 'coupon-success' : ''}`} data-testid={`coupon-card-${coupon.id}`}>
+        {/* Immagine coupon con link */}
         {coupon.image_url && (
           coupon.link_url ? (
             <a href={coupon.link_url} target="_blank" rel="noopener noreferrer" className="block">
@@ -717,6 +799,7 @@ const CouponCard = ({ coupon, cooldownHours }) => {
         </div>
       </div>
 
+      {/* Use Confirmation Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" data-testid="coupon-modal">
           <div className="ticket-card max-w-md w-full p-6 relative">
@@ -811,7 +894,7 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   
   const navigate = useNavigate();
-  const auth = useAuth();
+  const auth = useAuth(); // Usa il tuo AuthContext
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -819,10 +902,14 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
+      // Usa la funzione di login del tuo AuthContext
       await auth.login(email, password);
+      
+      // Dopo il login, ti mandiamo alla dashboard (se sei admin/organizzatore la vedrai!)
       navigate('/dashboard');
     } catch (err) {
       console.error("Errore di accesso:", err);
+      // Gestione errori chiara
       if (err.code === 'auth/user-not-found') {
         setError("Nessun account trovato con questa email.");
       } else if (err.code === 'auth/wrong-password') {
@@ -902,7 +989,6 @@ const LoginPage = () => {
     </div>
   );
 };
-
 // Register Page
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -1000,27 +1086,7 @@ const RegisterPage = () => {
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-amber-200 text-sm mb-3">Tipo di account</label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, role: 'cliente' })}
-                className={`p-3 rounded-xl border-2 transition-all ${
-                  formData.role === 'cliente'
-                    ? 'border-cyan-400 bg-cyan-400/20'
-                    : 'border-cyan-400/30 hover:border-cyan-400/50'
-                }`}
-                data-testid="role-cliente-btn"
-              >
-                <User className="w-6 h-6 text-cyan-400 mx-auto mb-1" />
-                <span className="text-amber-200 text-sm">Cliente</span>
-              </button>
-              <button
-                type="button"
+         
                 onClick={() => setFormData({ ...formData, role: 'organizzatore' })}
                 className={`p-3 rounded-xl border-2 transition-all ${
                   formData.role === 'organizzatore'
@@ -1077,7 +1143,7 @@ const DashboardPage = () => {
       return;
     }
     fetchData();
-  }, [auth.user, navigate]);
+  }, [auth.user]);
 
   const fetchData = async () => {
     try {
@@ -1087,36 +1153,7 @@ const DashboardPage = () => {
       ]);
       setStats(statsRes.data);
       setParks(parksRes.data);
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="spinner-luna"></div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen starry-bg p-4">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-amber-400 text-glow-gold mb-8" data-testid="dashboard-title">
-          <Settings className="w-8 h-8 inline mr-2" />
-          Dashboard
-        </h1>
-
-        {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div className="ticket-card p-4 text-center">
-              <FerrisWheel className="w-8 h-8 text-amber-400 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-amber-400">{stats.total_parks}</p>
-              <p className="text-amber-200/60 text-sm">Luna Park</p>
-            </div>
+   
             <div className="ticket-card p-4 text-center">
               <Ticket className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
               <p className="text-2xl font-bold text-cyan-400">{stats.total_coupons}</p>
@@ -1127,14 +1164,10 @@ const DashboardPage = () => {
               <p className="text-2xl font-bold text-green-400">{stats.total_usages}</p>
               <p className="text-amber-200/60 text-sm">Utilizzi</p>
             </div>
-            <div className="ticket-card p-4 text-center">
-              <Users className="w-8 h-8 text-pink-400 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-pink-400">{stats.total_users}</p>
-              <p className="text-amber-200/60 text-sm">Utenti</p>
-            </div>
           </div>
         )}
 
+        {/* Parks List */}
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-amber-300">I tuoi Luna Park</h2>
           <Link to="/dashboard/park/new" className="btn-luna text-sm" data-testid="add-park-btn">
@@ -1165,17 +1198,17 @@ const DashboardPage = () => {
                     {park.status === 'approved' ? 'Approvato' : park.status === 'pending' ? 'In attesa' : 'Rifiutato'}
                   </span>
                 </div>
-                <div className="flex gap-2">
-                  {park.status === 'approved' ? (
-                    <Link to={`/dashboard/park/${park.id}`} className="btn-luna text-sm">
-                      <Settings className="w-4 h-4 mr-1" /> Gestisci
-                    </Link>
-                  ) : (
-                    <button disabled className="bg-gray-700/50 text-gray-500 cursor-not-allowed px-3 py-1.5 rounded-lg text-sm flex items-center">
-                      <Lock className="w-4 h-4 mr-1" /> In attesa
-                    </button>
-                  )}
-                </div>
+              <div className="flex gap-2">
+  {park.status === 'approved' ? (
+    <Link to={`/dashboard/park/${park.id}`} className="btn-luna text-sm">
+      <Settings className="w-4 h-4 mr-1" /> Gestisci
+    </Link>
+  ) : (
+    <button disabled className="bg-gray-700/50 text-gray-500 cursor-not-allowed px-3 py-1.5 rounded-lg text-sm flex items-center">
+      <Lock className="w-4 h-4 mr-1" /> In attesa
+    </button>
+  )}
+</div>
               </div>
             ))}
           </div>
@@ -1195,12 +1228,14 @@ const ImageUploader = ({ currentImage, onImageChange, parkId, auth }) => {
     const file = e.target.files[0];
     if (!file) return;
 
+    // Validate file type
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     if (!allowedTypes.includes(file.type)) {
       alert('Tipo file non supportato. Usa JPG, PNG, WebP o GIF.');
       return;
     }
 
+    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       alert('File troppo grande. Massimo 5MB.');
       return;
@@ -1222,6 +1257,7 @@ const ImageUploader = ({ currentImage, onImageChange, parkId, auth }) => {
       if (response.data.success) {
         setPreviewUrl(response.data.image_url);
         
+        // If we have a parkId, save to the park
         if (parkId && parkId !== 'new') {
           await axios.put(`${API}/lunaparks/${parkId}/update-image`, 
             { image_url: response.data.image_url },
@@ -1243,6 +1279,7 @@ const ImageUploader = ({ currentImage, onImageChange, parkId, auth }) => {
     <div className="space-y-3">
       <label className="block text-amber-200 text-sm mb-2">Immagine Luna Park</label>
       
+      {/* Preview */}
       <div className="relative w-full h-48 bg-amber-400/10 rounded-xl overflow-hidden border-2 border-dashed border-amber-400/30 hover:border-amber-400/50 transition-colors">
         {previewUrl ? (
           <>
@@ -1295,7 +1332,6 @@ const ImageUploader = ({ currentImage, onImageChange, parkId, auth }) => {
 const ParkManagementPage = () => {
   const { parkId } = useParams();
   const isNew = parkId === 'new';
-  const navigate = useNavigate();
   const [park, setPark] = useState(null);
   const [rides, setRides] = useState([]);
   const [coupons, setCoupons] = useState([]);
@@ -1328,91 +1364,98 @@ const ParkManagementPage = () => {
   const [googleIntegrationMessage, setGoogleIntegrationMessage] = useState('');
   const [importingCoupons, setImportingCoupons] = useState(false);
   const auth = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!isNew) {
       fetchParkData();
     }
-  }, [parkId, isNew]);
+  }, [parkId]);
 
-  const fetchParkData = async () => {
+const fetchParkData = async () => {
+  if (isNew) { // Usiamo la variabile che abbiamo appena creato
+    setLoading(false);
+    return; 
+  }
+  
+  setLoading(true);
+  try {
+    // 2. Recupera i dati del Luna Park ESISTENTE
+    const parkRef = doc(db, "lunaparks", parkId);
+    const parkSnap = await getDoc(parkRef);
+
+    if (parkSnap.exists()) {
+      const parkData = { id: parkSnap.id, ...parkSnap.data() };
+
+      // --- CONTROLLO SICUREZZA CLIENT-SIDE ---
+      // Se non sei admin e non sei il proprietario, torna in dashboard
+      if (auth.user.role !== 'admin' && parkData.organizerId !== auth.user.uid) {
+        alert("Accesso negato.");
+        navigate('/dashboard');
+        return;
+      }
+
+      setPark(parkData);
+      setFormData(parkData);
+
+      // 3. Recupera le Giostre collegate a questo parco
+      const ridesQuery = query(collection(db, "rides"), where("parkId", "==", parkId));
+      const ridesSnap = await getDocs(ridesQuery);
+      setRides(ridesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      
+    } else {
+      console.error("Luna Park non trovato");
+      navigate('/dashboard');
+    }
+  } catch (error) {
+    console.error("Errore nel caricamento Firebase:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+ const handleSavePark = async (e) => {
+  e.preventDefault();
+  setSaving(true);
+  setError('');
+
+  try {
+    // PULIZIA DATI: Trasformiamo ogni undefined in stringa vuota o numero
+    const cleanData = {
+      name: formData.name || '',
+      city: formData.city || '',
+      address: formData.address || '',
+      region: formData.region || '',
+      description: formData.description || '',
+      image_url: formData.image_url || '',
+      opening_date: formData.opening_date || '',
+      closing_date: formData.closing_date || '',
+      phone: formData.phone || '',
+      opening_hours: formData.opening_hours || '',
+      coupon_cooldown_hours: Number(formData.coupon_cooldown_hours) || 24,
+      facebook_url: formData.facebook_url || '',
+      instagram_url: formData.instagram_url || '',
+      about_us: formData.about_us || '',
+      events: formData.events || '',
+      organizerId: auth.user.uid, // Assicurati che auth.user esista!
+      status: isNew ? 'pending' : (park?.status || 'pending'),
+      updatedAt: serverTimestamp()
+    };
+
     if (isNew) {
-      setLoading(false);
-      return;
-    }
-    
-    setLoading(true);
-    try {
+      // Usa cleanData invece di formData
+      const docRef = await addDoc(collection(db, "lunaparks"), {
+        ...cleanData,
+        createdAt: serverTimestamp(),
+      });
+      alert("Creato con successo!");
+      navigate('/dashboard');
+    } else {
       const parkRef = doc(db, "lunaparks", parkId);
-      const parkSnap = await getDoc(parkRef);
-
-      if (parkSnap.exists()) {
-        const parkData = { id: parkSnap.id, ...parkSnap.data() };
-
-        if (auth.user.role !== 'admin' && parkData.organizerId !== auth.user.uid) {
-          alert("Accesso negato.");
-          navigate('/dashboard');
-          return;
-        }
-
-        setPark(parkData);
-        setFormData(parkData);
-
-        const ridesQuery = query(collection(db, "rides"), where("parkId", "==", parkId));
-        const ridesSnap = await getDocs(ridesQuery);
-        setRides(ridesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        
-      } else {
-        console.error("Luna Park non trovato");
-        navigate('/dashboard');
-      }
-    } catch (error) {
-      console.error("Errore nel caricamento Firebase:", error);
-    } finally {
-      setLoading(false);
+      await updateDoc(parkRef, cleanData);
+      alert("Modificato!");
+      fetchParkData();
     }
-  };
-
-  const handleSavePark = async (e) => {
-    e.preventDefault();
-    setSaving(true);
-    setError('');
-
-    try {
-      const cleanData = {
-        name: formData.name || '',
-        city: formData.city || '',
-        address: formData.address || '',
-        region: formData.region || '',
-        description: formData.description || '',
-        image_url: formData.image_url || '',
-        opening_date: formData.opening_date || '',
-        closing_date: formData.closing_date || '',
-        phone: formData.phone || '',
-        opening_hours: formData.opening_hours || '',
-        coupon_cooldown_hours: Number(formData.coupon_cooldown_hours) || 24,
-        facebook_url: formData.facebook_url || '',
-        instagram_url: formData.instagram_url || '',
-        about_us: formData.about_us || '',
-        events: formData.events || '',
-        organizerId: auth.user.uid,
-        status: isNew ? 'pending' : (park?.status || 'pending'),
-        updatedAt: serverTimestamp()
-      };
-
-      if (isNew) {
-        const docRef = await addDoc(collection(db, "lunaparks"), {
-          ...cleanData,
-          createdAt: serverTimestamp(),
-        });
-        alert("Creato con successo!");
-        navigate('/dashboard');
-      } else {
-        const parkRef = doc(db, "lunaparks", parkId);
-        await updateDoc(parkRef, cleanData);
-        alert("Modificato!");
-        fetchParkData();
-      }
+// ... resto del catch
     } catch (err) {
       console.error("Errore durante il salvataggio Firebase:", err);
       setError("Errore Firebase: " + err.message);
@@ -1485,13 +1528,14 @@ const ParkManagementPage = () => {
           </h1>
         </div>
 
+        {/* Tabs */}
         {!isNew && (
           <div className="flex gap-2 mb-6 overflow-x-auto">
             {['info', 'giostre', 'coupon'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 rounded-full font-medium transition-all whitespace-nowrap ${
+                className={`px-4 py-2 rounded-full font-medium transition-all ${
                   activeTab === tab
                     ? 'bg-amber-400 text-[#0a0a1a]'
                     : 'bg-amber-400/20 text-amber-400 hover:bg-amber-400/30'
@@ -1504,6 +1548,7 @@ const ParkManagementPage = () => {
           </div>
         )}
 
+        {/* Info Tab */}
         {(isNew || activeTab === 'info') && (
           <form onSubmit={handleSavePark} className="ticket-card p-6 space-y-4">
             {error && (
@@ -1512,6 +1557,7 @@ const ParkManagementPage = () => {
               </div>
             )}
 
+            {/* Image Upload */}
             <ImageUploader 
               currentImage={formData.image_url} 
               onImageChange={(url) => setFormData({ ...formData, image_url: url })}
@@ -1640,6 +1686,7 @@ const ParkManagementPage = () => {
               </div>
             </div>
 
+            {/* Social Links */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-amber-200 text-sm mb-2 flex items-center gap-2">
@@ -1669,6 +1716,7 @@ const ParkManagementPage = () => {
               </div>
             </div>
 
+            {/* Chi Siamo */}
             <div>
               <label className="block text-amber-200 text-sm mb-2 flex items-center gap-2">
                 <Info className="w-4 h-4 text-amber-400" /> Chi Siamo
@@ -1682,6 +1730,7 @@ const ParkManagementPage = () => {
               />
             </div>
 
+            {/* Eventi */}
             <div>
               <label className="block text-amber-200 text-sm mb-2 flex items-center gap-2">
                 <PartyPopper className="w-4 h-4 text-purple-400" /> Eventi
@@ -1695,6 +1744,7 @@ const ParkManagementPage = () => {
               />
             </div>
 
+            {/* Google Integration Section */}
             {!isNew && (
               <div className="border-t border-amber-400/20 pt-4 space-y-4">
                 <h3 className="text-lg font-bold text-amber-400 flex items-center gap-2">
@@ -1766,6 +1816,7 @@ const ParkManagementPage = () => {
               </div>
             )}
 
+            {/* Validità Coupon */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-amber-200 text-sm mb-2">Orario validità coupon (inizio)</label>
@@ -1826,6 +1877,7 @@ const ParkManagementPage = () => {
           </form>
         )}
 
+        {/* Archive Confirmation Modal */}
         {showArchiveModal && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="ticket-card max-w-md w-full p-6">
@@ -1858,8 +1910,10 @@ const ParkManagementPage = () => {
           </div>
         )}
 
+        {/* Rides Tab */}
         {activeTab === 'giostre' && <RidesManager parkId={parkId} rides={rides} onUpdate={fetchParkData} auth={auth} />}
 
+        {/* Coupons Tab */}
         {activeTab === 'coupon' && <CouponsManager parkId={parkId} rides={rides} coupons={coupons} onUpdate={fetchParkData} auth={auth} />}
       </div>
     </div>
@@ -1995,6 +2049,7 @@ const RidesManager = ({ parkId, rides, onUpdate, auth }) => {
         </div>
       )}
 
+      {/* Delete Confirmation Modal */}
       {deleteModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="ticket-card max-w-md w-full p-6">
@@ -2228,6 +2283,7 @@ const CouponsManager = ({ parkId, rides, coupons, onUpdate, auth }) => {
             />
           </div>
           
+          {/* Foto Coupon */}
           <div>
             <label className="block text-amber-200 text-xs mb-1 flex items-center gap-1">
               <Camera className="w-3 h-3" /> Foto Coupon (opzionale)
@@ -2239,6 +2295,7 @@ const CouponsManager = ({ parkId, rides, coupons, onUpdate, auth }) => {
             />
           </div>
 
+          {/* Link Foto */}
           <div>
             <label className="block text-amber-200 text-xs mb-1 flex items-center gap-1">
               <ExternalLink className="w-3 h-3" /> Link (quando si clicca la foto)
@@ -2301,6 +2358,7 @@ const CouponsManager = ({ parkId, rides, coupons, onUpdate, auth }) => {
         </div>
       )}
 
+      {/* Delete Confirmation Modal */}
       {deleteModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="ticket-card max-w-md w-full p-6">
@@ -2345,7 +2403,7 @@ const AdminPage = () => {
       return;
     }
     fetchData();
-  }, [auth.user, navigate]);
+  }, [auth.user]);
 
   const fetchData = async () => {
     try {
@@ -2397,6 +2455,7 @@ const AdminPage = () => {
           Pannello Admin
         </h1>
 
+        {/* Pending Parks */}
         <section className="mb-8">
           <h2 className="text-xl font-bold text-amber-300 mb-4 flex items-center gap-2">
             <Clock className="w-5 h-5" />
@@ -2416,42 +2475,202 @@ const AdminPage = () => {
                     <div>
                       <h3 className="text-lg font-bold text-amber-400">{park.name}</h3>
                       <p className="text-amber-200/60 text-sm">{park.address}, {park.city}, {park.region}</p>
-                      <p className="text-amber-100/70 text-sm mt-2"…
-<p className="text-amber-200/60 text-sm">
-                      Mostra questa schermata al gestore della giostra per ricevere lo sconto.
-                    </p>
-                    <button 
-                      onClick={() => setShowModal(false)}
-                      className="w-full mt-6 btn-use-now"
-                    >
-                      Chiudi
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <div className="w-20 h-20 bg-pink-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <AlertCircle className="w-12 h-12 text-pink-400" />
+                      <p className="text-amber-100/70 text-sm mt-2">{park.description}</p>
                     </div>
-                    <h3 className="text-2xl font-bold text-pink-400 mb-2">Errore!</h3>
-                    <p className="text-amber-100/80 mb-6">{useResult.message}</p>
-                    <button 
-                      onClick={() => setShowModal(false)}
-                      className="w-full btn-luna-pink"
-                    >
-                      Ho capito
+                  </div>
+                  <div className="flex gap-2 mt-4">
+                    <button onClick={() => handleApprove(park.id)} className="btn-luna text-sm flex-1" data-testid={`approve-park-${park.id}`}>
+                      <Check className="w-4 h-4 inline mr-1" /> Approva
                     </button>
-                  </>
-                )}
+                    <button onClick={() => handleReject(park.id)} className="btn-luna-pink text-sm flex-1" data-testid={`reject-park-${park.id}`}>
+                      <X className="w-4 h-4 inline mr-1" /> Rifiuta
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* All Parks */}
+        <section>
+          <h2 className="text-xl font-bold text-amber-300 mb-4 flex items-center gap-2">
+            <FerrisWheel className="w-5 h-5" />
+            Luna Park approvati ({allParks.length})
+          </h2>
+
+          <div className="space-y-2">
+            {allParks.map((park) => (
+              <div key={park.id} className="ticket-card p-4 flex items-center justify-between" data-testid={`approved-park-${park.id}`}>
+                <div>
+                  <h3 className="text-lg font-bold text-amber-400">{park.name}</h3>
+                  <p className="text-amber-200/60 text-sm">{park.city}, {park.region}</p>
+                </div>
+                <Link to={`/park/${park.id}`} className="text-amber-400 hover:text-amber-300">
+                  <ChevronRight className="w-6 h-6" />
+                </Link>
               </div>
-            )}
+            ))}
           </div>
-        </div>
-      )}
-    </>
+        </section>
+      </div>
+    </div>
   );
 };
 
-// --- LE FUNZIONI DI STRUTTURA FINALI ---
+// Forgot Password Page
+const ForgotPasswordPage = () => {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await axios.post(`${API}/auth/forgot-password`, { email });
+      setSent(true);
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen starry-bg flex items-center justify-center p-4">
+      <div className="ticket-card max-w-md w-full p-6 md:p-8">
+        <div className="text-center mb-8">
+          <KeyRound className="w-16 h-16 text-cyan-400 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-cyan-400">Password dimenticata</h1>
+          <p className="text-amber-100/70 mt-2">Inserisci la tua email per recuperare la password</p>
+        </div>
+
+        {sent ? (
+          <div className="text-center">
+            <Check className="w-16 h-16 text-green-400 mx-auto mb-4" />
+            <p className="text-amber-100/80 mb-4">
+              Se l'email esiste, riceverai le istruzioni per il reset della password.
+            </p>
+            <Link to="/login" className="btn-luna inline-block">
+              Torna al login
+            </Link>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-amber-200 text-sm mb-2">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="search-input rounded-xl"
+                placeholder="email@esempio.it"
+                required
+                data-testid="forgot-email-input"
+              />
+            </div>
+            <button type="submit" disabled={loading} className="btn-luna w-full" data-testid="forgot-submit-btn">
+              {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Invia istruzioni'}
+            </button>
+            <Link to="/login" className="block text-center text-amber-400 text-sm hover:underline">
+              Torna al login
+            </Link>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Main App Component
+function AppContent() {
+  const auth = useAuth();
+
+  // Seed data on first load
+  useEffect(() => {
+    const seedData = async () => {
+      try {
+        await axios.post(`${API}/seed`);
+      } catch (error) {
+        // Ignore errors - data might already be seeded
+      }
+    };
+    seedData();
+  }, []);
+
+  if (auth.loading) {
+    return (
+      <div className="min-h-screen bg-[#0a0a1a] flex items-center justify-center">
+        <div className="spinner-luna"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="App min-h-screen bg-[#0a0a1a]">
+      <HashRouter>
+        <Header user={auth.user} logout={auth.logout} />
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/park/:parkId" element={<ParkDetailPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/dashboard/park/new" element={<ParkManagementPage />} />
+          <Route path="/dashboard/park/:parkId" element={<ParkManagementPage />} />
+          <Route path="/admin" element={<AdminPage />} />
+        </Routes>
+      </HashRouter>
+    </div>
+  );
+}
+
+function AuthContent() {
+  const { user, logout, getAuthHeaders } = useAuth();
+
+  return (
+    <>
+      {/* Il tuo Header/Navbar */}
+      <Header user={user} logout={logout} />
+      
+      <Routes>
+        {/* Pagine Pubbliche */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/park/:parkId" element={<ParkDetailPage />} />
+        
+        {/* Pagina Login/Register (se non sei loggato) */}
+        {!user && (
+          <>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+          </>
+        )}
+
+        {/* Dashboard: Accessibile sia a te (Admin) che agli Organizzatori */}
+        <Route path="/dashboard" element={<DashboardPage />} />
+        
+        {/* Pannello Admin: Accessibile SOLO a te */}
+        <Route path="/admin" element={<AdminPage />} />
+
+        {/* Gestione Parco Singolo (dalla dashboard) */}
+        <Route path="/dashboard/park/:parkId" element={<ParkManagementPage />} />
+        <Route path="/dashboard/park/new" element={<ParkManagementPage />} />
+
+        {/* Se l'utente scrive una rotta che non esiste */}
+        <Route path="*" element={
+          <div className="text-white p-20 text-center">
+            <h2 className="text-2xl">Attrazione chiusa! (Errore 404)</h2>
+            <p className="mt-4">Questa pagina non esiste nel nostro Luna Park.</p>
+          </div>
+        } />
+      </Routes>
+    </>
+  );
+}
+
+// ... qui finiscono i tuoi componenti precedenti (come ParkManagementPage)
 
 function App() {
   return (
@@ -2474,20 +2693,21 @@ function AppContent() {
 
   return (
     <div className="App min-h-screen bg-[#0a0a1a]">
-      <Router>
+      <HashRouter>
         <Header user={auth.user} logout={auth.logout} />
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/park/:parkId" element={<ParkDetailPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/dashboard/park/new" element={<ParkManagementPage />} />
           <Route path="/dashboard/park/:parkId" element={<ParkManagementPage />} />
           <Route path="/admin" element={<AdminPage />} />
         </Routes>
-      </Router>
+      </HashRouter>
     </div>
   );
 }
-
 export default App;
