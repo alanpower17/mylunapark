@@ -1423,7 +1423,7 @@ const ParkManagementPage = () => {
  const fetchParkData = async () => {
   // --- 1. CONTROLLO SALVAVITA: Se è un nuovo parco, fermati qui! ---
   if (!parkId || parkId === 'new') {
-    setIsNew(true);      // Diciamo al sistema che stiamo creando
+   
     setLoading(false);   // Togliamo la rotellina di caricamento
     return;              // ESCI SUBITO per non far crashare Firebase
   }
