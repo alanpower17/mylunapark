@@ -2417,3 +2417,77 @@ const AdminPage = () => {
                       <h3 className="text-lg font-bold text-amber-400">{park.name}</h3>
                       <p className="text-amber-200/60 text-sm">{park.address}, {park.city}, {park.region}</p>
                       <p className="text-amber-100/70 text-sm mt-2"…
+<p className="text-amber-200/60 text-sm">
+                      Mostra questa schermata al gestore della giostra per ricevere lo sconto.
+                    </p>
+                    <button 
+                      onClick={() => setShowModal(false)}
+                      className="w-full mt-6 btn-use-now"
+                    >
+                      Chiudi
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-20 h-20 bg-pink-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <AlertCircle className="w-12 h-12 text-pink-400" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-pink-400 mb-2">Errore!</h3>
+                    <p className="text-amber-100/80 mb-6">{useResult.message}</p>
+                    <button 
+                      onClick={() => setShowModal(false)}
+                      className="w-full btn-luna-pink"
+                    >
+                      Ho capito
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+// --- LE FUNZIONI DI STRUTTURA FINALI ---
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+}
+
+function AppContent() {
+  const auth = useAuth();
+
+  if (auth.loading) {
+    return (
+      <div className="min-h-screen bg-[#0a0a1a] flex items-center justify-center">
+        <div className="spinner-luna"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="App min-h-screen bg-[#0a0a1a]">
+      <Router>
+        <Header user={auth.user} logout={auth.logout} />
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/park/:parkId" element={<ParkDetailPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/dashboard/park/:parkId" element={<ParkManagementPage />} />
+          <Route path="/admin" element={<AdminPage />} />
+        </Routes>
+      </Router>
+    </div>
+  );
+}
+
+export default App;
