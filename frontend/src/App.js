@@ -411,22 +411,21 @@ const ParkCard = ({ park, userLocation }) => {
   );
 };
 
-// Park Detail Page
+// --- PARK DETAIL PAGE (Versione Unificata e Corretta) ---
 const ParkDetailPage = () => {
   const { parkId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   const [park, setPark] = useState(null);
   const [coupons, setCoupons] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [showAboutModal, setShowAboutModal] = useState(false);
-  const [showEventsModal, setShowEventsModal] = useState(false);
 
-  // 1. Funzione per recuperare i dati (unica)
+  // 1. Unica funzione di recupero dati
   const fetchParkData = useCallback(async () => {
-    if (parkId === 'new') {
+    if (!parkId || parkId === 'new') {
       navigate('/');
       return;
     }
@@ -434,144 +433,149 @@ const ParkDetailPage = () => {
       setLoading(true);
       const parkRef = doc(db, "parks", parkId);
       const parkSnap = await getDoc(parkRef);
-      
+
       if (parkSnap.exists()) {
-        setPark({ id: parkSnap.id, ...parkSnap.data() });
+        const data = parkSnap.data();
+        setPark({ id: parkSnap.id, ...data });
+
+        // Recupero i coupon legati a questo parco
         const couponsRef = collection(db, "coupons");
         const q = query(couponsRef, where("parkId", "==", parkId));
         const querySnapshot = await getDocs(q);
         setCoupons(querySnapshot.docs.map(d => ({ id: d.id, ...d.data() })));
       }
     } catch (error) {
-      console.error('Errore:', error);
+      console.error('Errore Firebase:', error);
     } finally {
       setLoading(false);
     }
   }, [parkId, navigate]);
 
-  // 2. Trigger del caricamento
+  // 2. Unico effetto al caricamento
   useEffect(() => {
     fetchParkData();
   }, [fetchParkData]);
 
-  // 3. Funzioni Admin
+  // 3. Gestione approvazione (solo per Admin)
   const handleApprove = async (id) => {
-    if (!window.confirm("Approvare questo parco?")) return;
+    if (!window.confirm("Vuoi approvare ufficialmente questo luna park?")) return;
     try {
-      await updateDoc(doc(db, "parks", id), { status: 'approved' });
+      await updateDoc(doc(db, "parks", id), { 
+        status: 'approved',
+        approvedAt: new Date().toISOString()
+      });
+      alert("Parco approvato con successo!");
       fetchParkData();
-    } catch (e) { alert("Errore"); }
+    } catch (e) {
+      console.error(e);
+      alert("Errore durante l'approvazione");
+    }
   };
 
-  const filteredCoupons = coupons.filter(c => 
+  const filteredCoupons = coupons.filter(c =>
     c.ride_name?.toLowerCase().includes(search.toLowerCase())
   );
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="spinner-luna"></div></div>;
-  if (!park) return <div className="min-h-screen flex items-center justify-center text-amber-200">Parco non trovato</div>;
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0b]">
+      <div className="spinner-luna"></div>
+    </div>
+  );
+
+  if (!park) return (
+    <div className="min-h-screen flex items-center justify-center text-amber-200 bg-[#0a0a0b]">
+      Parco non trovato.
+    </div>
+  );
 
   return (
-    <div className="min-h-screen starry-bg pb-8">
-      {/* Banner Admin */}
+    <div className="min-h-screen starry-bg pb-12">
+      {/* Banner di Approvazione per l'Admin */}
       {user?.role === 'admin' && park.status === 'pending' && (
-        <div className="max-w-4xl mx-auto p-4 mb-4 bg-purple-900/50 border border-purple-500 rounded-xl flex justify-between items-center">
-          <span className="text-purple-200 font-bold">Richiesta Pendente</span>
-          <button onClick={() => handleApprove(park.id)} className="bg-green-600 px-4 py-2 rounded-lg text-white text-sm font-bold">Approva Ora</button>
+        <div className="max-w-5xl mx-auto p-4 mb-6 bg-purple-900/40 border border-purple-500/50 rounded-2xl flex justify-between items-center backdrop-blur-md">
+          <div>
+            <p className="text-purple-200 font-bold">Richiesta di pubblicazione</p>
+            <p className="text-xs text-purple-300/70">Questo parco non è ancora visibile al pubblico.</p>
+          </div>
+          <button 
+            onClick={() => handleApprove(park.id)}
+            className="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-lg shadow-green-900/20"
+          >
+            Approva Parco
+          </button>
         </div>
       )}
 
-      {/* Header Immagine */}
-      <div className="relative h-64 bg-gray-900">
-        {park.image_url && <img src={park.image_url} alt={park.name} className="w-full h-full object-cover opacity-50" />}
-        <div className="absolute bottom-6 left-6">
-          <h1 className="text-4xl font-black text-amber-400 uppercase">{park.name}</h1>
-          <p className="text-cyan-400 flex items-center gap-1"><MapPin className="w-4 h-4"/> {park.city}</p>
-        </div>
-      </div>
-
-      {/* Lista Coupon */}
-      <div className="max-w-4xl mx-auto px-4 mt-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredCoupons.map(coupon => (
-            <CouponCard key={coupon.id} coupon={coupon} />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-        {/* --- HEADER DEL PARCO --- */}
-        <div className="flex flex-col md:flex-row gap-6 mb-8">
-          <div className="w-full md:w-48 h-48 rounded-3xl overflow-hidden border-2 border-amber-400/20 shadow-xl shadow-cyan-500/10">
-             <img src={park?.imageUrl || '/placeholder-park.jpg'} alt={park?.name} className="w-full h-full object-cover" />
+      <div className="max-w-5xl mx-auto px-4 pt-6">
+        {/* Header del Parco */}
+        <div className="flex flex-col md:flex-row gap-8 mb-10 items-start md:items-center">
+          <div className="w-full md:w-56 h-56 rounded-[2rem] overflow-hidden border-2 border-amber-400/20 shadow-2xl shadow-cyan-500/10 shrink-0">
+            <img 
+              src={park?.imageUrl || park?.image_url || '/placeholder-park.jpg'} 
+              alt={park?.name} 
+              className="w-full h-full object-cover" 
+            />
           </div>
           
           <div className="flex-1">
-            <h1 className="text-4xl font-black text-amber-400 mb-2 uppercase tracking-tighter">
+            <h1 className="text-5xl font-black text-amber-400 mb-2 uppercase tracking-tighter italic">
               {park?.name}
             </h1>
-            <p className="text-cyan-300 flex items-center gap-2 mb-4">
-              <MapPin className="w-4 h-4" /> {park?.city}, {park?.region}
+            <p className="text-cyan-300 flex items-center gap-2 text-lg mb-6">
+              <MapPin className="w-5 h-5 text-amber-400" /> {park?.city} ({park?.region})
             </p>
-            
-            {/* ... il resto del tuo codice (About, Eventi, ecc) */}
+
+            <div className="flex flex-wrap gap-3">
+               <button 
+                onClick={() => setShowAboutModal(true)}
+                className="px-6 py-2 bg-white/5 border border-white/10 rounded-full text-white hover:bg-white/10 transition-all flex items-center gap-2"
+               >
+                 <Info className="w-4 h-4" /> Info e Orari
+               </button>
+               {/* Altri bottoni social/eventi qui */}
+            </div>
           </div>
         </div>
+
+        {/* Sezione Coupon */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+            <Ticket className="text-amber-400" /> Coupon Disponibili
+          </h2>
+          
+          {filteredCoupons.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {filteredCoupons.map(coupon => (
+                <CouponCard key={coupon.id} coupon={coupon} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-white/5 rounded-3xl border border-dashed border-white/10">
+              <p className="text-gray-400">Nessun coupon disponibile al momento.</p>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Modale Informazioni */}
+      {showAboutModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-md bg-black/60">
+          <div className="bg-[#1a1a1c] border border-amber-400/30 p-8 rounded-[2.5rem] max-w-xl w-full shadow-2xl">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-amber-400">Informazioni</h3>
+              <button onClick={() => setShowAboutModal(false)} className="text-gray-400 hover:text-white">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <p className="text-gray-300 leading-relaxed">
+              {park?.about_us || "Nessuna informazione aggiuntiva disponibile."}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
-
-  // 1. Definiamo la funzione di recupero dati
-  const fetchParkData = useCallback(async () => {
-    try {
-      setLoading(true);
-      
-      // Lettura del Parco
-      const parkRef = doc(db, "parks", parkId);
-      const parkSnap = await getDoc(parkRef);
-      
-      if (parkSnap.exists()) {
-        setPark({ id: parkSnap.id, ...parkSnap.data() });
-
-        // Lettura Coupon legati a questo parco
-        const couponsRef = collection(db, "coupons");
-        const q = query(couponsRef, where("parkId", "==", parkId));
-        const querySnapshot = await getDocs(q);
-        
-        setCoupons(querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })));
-      }
-    } catch (error) {
-      console.error('Errore Firebase:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [parkId]);
-
-  // 2. Il "vigile" della pagina: controlla l'ID e lancia il fetch
-  useEffect(() => {
-    if (parkId === 'new') {
-      navigate('/'); // Se l'ID è "new", torna in home (qui non creiamo nulla)
-      return;
-    }
-    fetchParkData();
-  }, [parkId, navigate, fetchParkData]);
-
-  // ... restano i filtri e il return del JSX
-
-  useEffect(() => {
-    fetchParkDetails();
-  }, [parkId]);
-
-  const fetchParkDetails = async () => {
-    try {
-      setLoading(true);
-      
-
 const fetchParkDetails = async () => {
   try {
     setLoading(true);
