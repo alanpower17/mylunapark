@@ -1106,7 +1106,7 @@ const RegisterPage = () => {
             )}
           </div>
 
-          <button
+          <button>
             type="submit"
             disabled={loading}
             className="btn-luna w-full mt-6"
