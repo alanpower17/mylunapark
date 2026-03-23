@@ -1086,27 +1086,7 @@ const RegisterPage = () => {
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-amber-200 text-sm mb-2">Tipo Account</label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, role: 'cliente' })}
-                className={`p-3 rounded-xl border-2 transition-all ${
-                  formData.role === 'cliente'
-                    ? 'border-amber-400 bg-amber-400/20'
-                    : 'border-amber-400/30 hover:border-amber-400/50'
-                }`}
-                data-testid="role-cliente-btn"
-              >
-                <User className="w-6 h-6 text-amber-400 mx-auto mb-1" />
-                <span className="text-amber-200 text-sm">Cliente</span>
-              </button>
-              <button
-                type="button"
+         
                 onClick={() => setFormData({ ...formData, role: 'organizzatore' })}
                 className={`p-3 rounded-xl border-2 transition-all ${
                   formData.role === 'organizzatore'
@@ -1173,41 +1153,7 @@ const DashboardPage = () => {
       ]);
       setStats(statsRes.data);
       setParks(parksRes.data);
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="spinner-luna"></div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen starry-bg p-4">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold text-amber-400 text-glow-gold mb-8" data-testid="dashboard-title">
-          Dashboard Organizzatore
-        </h1>
-
-        {/* Stats Grid */}
-        {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div className="ticket-card p-4 text-center">
-              <FerrisWheel className="w-8 h-8 text-amber-400 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-amber-400">{stats.total_parks}</p>
-              <p className="text-amber-200/60 text-sm">Luna Park</p>
-            </div>
-            <div className="ticket-card p-4 text-center">
-              <Star className="w-8 h-8 text-pink-400 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-pink-400">{stats.total_rides}</p>
-              <p className="text-amber-200/60 text-sm">Giostre</p>
-            </div>
+   
             <div className="ticket-card p-4 text-center">
               <Ticket className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
               <p className="text-2xl font-bold text-cyan-400">{stats.total_coupons}</p>
@@ -2681,16 +2627,6 @@ function AppContent() {
   );
 }
 
-function App() {
-  return (
-    <AuthProvider>
-      <Router>
-        <AuthContent />
-      </Router>
-    </AuthProvider>
-  );
-}
-
 function AuthContent() {
   const { user, logout, getAuthHeaders } = useAuth();
 
@@ -2734,4 +2670,46 @@ function AuthContent() {
   );
 }
 
+// ... qui finiscono i tuoi componenti precedenti (come ParkManagementPage)
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+}
+
+function AppContent() {
+  const auth = useAuth();
+
+  if (auth.loading) {
+    return (
+      <div className="min-h-screen bg-[#0a0a1a] flex items-center justify-center">
+        <div className="spinner-luna"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="App min-h-screen bg-[#0a0a1a]">
+      <HashRouter>
+        <Header user={auth.user} logout={auth.logout} />
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/park/:parkId" element={<ParkDetailPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/dashboard/park/new" element={<ParkManagementPage />} />
+          <Route path="/dashboard/park/:parkId" element={<ParkManagementPage />} />
+          <Route path="/admin" element={<AdminPage />} />
+        </Routes>
+      </HashRouter>
+    </div>
+  );
+}
+
+export default App;
 export default App;
