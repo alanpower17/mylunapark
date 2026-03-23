@@ -414,18 +414,103 @@ const ParkCard = ({ park, userLocation }) => {
 // Park Detail Page
 const ParkDetailPage = () => {
   const { parkId } = useParams();
+  const navigate = useNavigate(); // Fondamentale: deve essere definito qui!
   const [park, setPark] = useState(null);
   const [coupons, setCoupons] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showEventsModal, setShowEventsModal] = useState(false);
-  const fetchParkData = async () => {
-  // Se per errore qualcuno finisce qui con "new", rimandalo alla home
-  if (parkId === 'new') {
-    navigate('/');
-    return;
-  }
+
+  return (
+    <div className="min-h-screen starry-bg p-4">
+      <div className="max-w-4xl mx-auto">
+        
+        {/* --- SEZIONE ADMIN: AZIONI RAPIDE --- */}
+        {user?.role === 'admin' && park?.status === 'pending' && (
+          <div className="bg-purple-900/40 border border-purple-500/50 p-4 rounded-2xl mb-6 flex items-center justify-between">
+            <div>
+              <p className="text-purple-200 font-bold">Richiesta di Approvazione</p>
+              <p className="text-purple-200/60 text-sm">Questo parco non è ancora visibile al pubblico.</p>
+            </div>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => handleApprove(park.id)} 
+                className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all"
+              >
+                Approva
+              </button>
+              <button 
+                onClick={() => handleReject(park.id)} 
+                className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all"
+              >
+                Rifiuta
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* --- HEADER DEL PARCO --- */}
+        <div className="flex flex-col md:flex-row gap-6 mb-8">
+          <div className="w-full md:w-48 h-48 rounded-3xl overflow-hidden border-2 border-amber-400/20 shadow-xl shadow-cyan-500/10">
+             <img src={park?.imageUrl || '/placeholder-park.jpg'} alt={park?.name} className="w-full h-full object-cover" />
+          </div>
+          
+          <div className="flex-1">
+            <h1 className="text-4xl font-black text-amber-400 mb-2 uppercase tracking-tighter">
+              {park?.name}
+            </h1>
+            <p className="text-cyan-300 flex items-center gap-2 mb-4">
+              <MapPin className="w-4 h-4" /> {park?.city}, {park?.region}
+            </p>
+            
+            {/* ... il resto del tuo codice (About, Eventi, ecc) */}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+  // 1. Definiamo la funzione di recupero dati
+  const fetchParkData = useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      // Lettura del Parco
+      const parkRef = doc(db, "parks", parkId);
+      const parkSnap = await getDoc(parkRef);
+      
+      if (parkSnap.exists()) {
+        setPark({ id: parkSnap.id, ...parkSnap.data() });
+
+        // Lettura Coupon legati a questo parco
+        const couponsRef = collection(db, "coupons");
+        const q = query(couponsRef, where("parkId", "==", parkId));
+        const querySnapshot = await getDocs(q);
+        
+        setCoupons(querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })));
+      }
+    } catch (error) {
+      console.error('Errore Firebase:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [parkId]);
+
+  // 2. Il "vigile" della pagina: controlla l'ID e lancia il fetch
+  useEffect(() => {
+    if (parkId === 'new') {
+      navigate('/'); // Se l'ID è "new", torna in home (qui non creiamo nulla)
+      return;
+    }
+    fetchParkData();
+  }, [parkId, navigate, fetchParkData]);
+
+  // ... restano i filtri e il return del JSX
 
   useEffect(() => {
     fetchParkDetails();
@@ -656,25 +741,36 @@ const fetchParkDetails = async () => {
         </div>
       )}
 
-      {/* Eventi Modal */}
-      {showEventsModal && park.events && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="ticket-card max-w-lg w-full p-6 max-h-[80vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-purple-400 flex items-center gap-2">
-                <PartyPopper className="w-5 h-5" /> Eventi
-              </h3>
-              <button onClick={() => setShowEventsModal(false)} className="text-amber-400/60 hover:text-amber-400">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="text-amber-100/80 whitespace-pre-wrap">{park.events}</div>
-          </div>
-        </div>
-      )}
+ {/* Eventi Modal */}
+{showEventsModal && park?.events && (
+  <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" data-testid="events-modal">
+    <div className="ticket-card max-w-lg w-full p-6 max-h-[80vh] overflow-y-auto relative">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-xl font-bold text-purple-400 flex items-center gap-2">
+          <PartyPopper className="w-5 h-5" /> Eventi e Programma
+        </h3>
+        <button 
+          onClick={() => setShowEventsModal(false)} 
+          className="text-amber-400/60 hover:text-amber-400 transition-colors"
+        >
+          <X className="w-6 h-6" />
+        </button>
+      </div>
+      
+      {/* Il contenuto degli eventi */}
+      <div className="text-amber-100/80 whitespace-pre-wrap leading-relaxed">
+        {park.events}
+      </div>
+      
+      <button 
+        onClick={() => setShowEventsModal(false)}
+        className="w-full mt-6 bg-purple-500/20 text-purple-400 py-3 rounded-xl font-bold border border-purple-500/30"
+      >
+        Chiudi
+      </button>
     </div>
-  );
-};
+  </div>
+)}
 
 // Coupon Card Component
 const CouponCard = ({ coupon, cooldownHours }) => {
@@ -1116,7 +1212,7 @@ const RegisterPage = () => {
           </button>
         </form>
 
-        <div className="mt-6 text-center">
+        <div> className="mt-6 text-center">
           <p className="text-amber-100/60 text-sm">
             Hai già un account?{' '}
             <Link to="/login" className="text-amber-400 hover:underline" data-testid="login-link">
@@ -1128,8 +1224,6 @@ const RegisterPage = () => {
     </div>
   );
 };
-
-// Dashboard Page (Organizer)
 const DashboardPage = () => {
   const [stats, setStats] = useState(null);
   const [parks, setParks] = useState([]);
@@ -1137,23 +1231,45 @@ const DashboardPage = () => {
   const auth = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!auth.user || (auth.user.role !== 'organizzatore' && auth.user.role !== 'admin')) {
-      navigate('/login');
-      return;
-    }
-    fetchData();
-  }, [auth.user]);
-
-  const fetchData = async () => {
+  // Spostato dentro fetchData per coerenza
+  const fetchData = useCallback(async () => {
     try {
+      setLoading(true);
       const [statsRes, parksRes] = await Promise.all([
         axios.get(`${API}/organizer/stats`, { headers: auth.getAuthHeaders() }),
         axios.get(`${API}/organizer/lunaparks`, { headers: auth.getAuthHeaders() })
       ]);
       setStats(statsRes.data);
       setParks(parksRes.data);
-   
+    } catch (error) {
+      console.error("Errore nel recupero dati dashboard:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [auth]);
+
+  useEffect(() => {
+    if (!auth.user || (auth.user.role !== 'organizzatore' && auth.user.role !== 'admin')) {
+      navigate('/login');
+      return;
+    }
+    fetchData();
+  }, [auth.user, navigate, fetchData]);
+
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="spinner-luna"></div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen starry-bg p-4 md:p-8">
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-3xl font-bold text-amber-400 mb-8">Dashboard Organizzatore</h1>
+
+        {/* Stats Grid */}
+        {stats && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
             <div className="ticket-card p-4 text-center">
               <Ticket className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
               <p className="text-2xl font-bold text-cyan-400">{stats.total_coupons}</p>
@@ -1168,47 +1284,45 @@ const DashboardPage = () => {
         )}
 
         {/* Parks List */}
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-amber-300">I tuoi Luna Park</h2>
-          <Link to="/dashboard/park/new" className="btn-luna text-sm" data-testid="add-park-btn">
+          <Link to="/dashboard/park/new" className="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">
             <Plus className="w-4 h-4 inline mr-1" /> Aggiungi
           </Link>
         </div>
 
         {parks.length === 0 ? (
-          <div className="ticket-card p-8 text-center" data-testid="no-parks-dashboard">
+          <div className="ticket-card p-12 text-center">
             <FerrisWheel className="w-16 h-16 text-amber-400/40 mx-auto mb-4" />
             <p className="text-amber-200/60">Non hai ancora aggiunto nessun luna park</p>
-            <Link to="/dashboard/park/new" className="btn-luna mt-4 inline-block">
-              Aggiungi il tuo primo Luna Park
-            </Link>
           </div>
         ) : (
           <div className="space-y-4">
             {parks.map((park) => (
-              <div key={park.id} className="ticket-card p-4 flex items-center justify-between" data-testid={`dashboard-park-${park.id}`}>
+              <div key={park.id} className="ticket-card p-4 flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-bold text-amber-400">{park.name}</h3>
                   <p className="text-amber-200/60 text-sm">{park.city}, {park.region}</p>
-                  <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs ${
-                    park.status === 'approved' ? 'bg-green-500/20 text-green-400' :
-                    park.status === 'pending' ? 'bg-amber-500/20 text-amber-400' :
-                    'bg-red-500/20 text-red-400'
+                  <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium ${
+                    park.status === 'approved' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
+                    park.status === 'pending' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
+                    'bg-red-500/20 text-red-400 border border-red-500/30'
                   }`}>
-                    {park.status === 'approved' ? 'Approvato' : park.status === 'pending' ? 'In attesa' : 'Rifiutato'}
+                    {park.status === 'approved' ? '● Approvato' : park.status === 'pending' ? '● In attesa' : '● Rifiutato'}
                   </span>
                 </div>
-              <div className="flex gap-2">
-  {park.status === 'approved' ? (
-    <Link to={`/dashboard/park/${park.id}`} className="btn-luna text-sm">
-      <Settings className="w-4 h-4 mr-1" /> Gestisci
-    </Link>
-  ) : (
-    <button disabled className="bg-gray-700/50 text-gray-500 cursor-not-allowed px-3 py-1.5 rounded-lg text-sm flex items-center">
-      <Lock className="w-4 h-4 mr-1" /> In attesa
-    </button>
-  )}
-</div>
+                
+                <div className="flex gap-2">
+                  {park.status === 'approved' ? (
+                    <Link to={`/dashboard/park/${park.id}`} className="bg-amber-500 hover:bg-amber-400 text-[#0a0a1a] px-4 py-2 rounded-lg text-sm font-bold transition-all">
+                      <Settings className="w-4 h-4 inline mr-1" /> Gestisci
+                    </Link>
+                  ) : (
+                    <button disabled className="bg-white/5 text-amber-100/30 cursor-not-allowed px-4 py-2 rounded-lg text-sm flex items-center gap-2 border border-white/10">
+                      <KeyRound className="w-4 h-4" /> In attesa di sblocco
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -1217,7 +1331,6 @@ const DashboardPage = () => {
     </div>
   );
 };
-
 // Image Upload Component
 const ImageUploader = ({ currentImage, onImageChange, parkId, auth }) => {
   const [uploading, setUploading] = useState(false);
@@ -2586,8 +2699,7 @@ const ForgotPasswordPage = () => {
 // Main App Component
 function AppContent() {
   const auth = useAuth();
-
-  // Seed data on first load
+    // Seed data on first load
   useEffect(() => {
     const seedData = async () => {
       try {
