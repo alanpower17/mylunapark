@@ -1409,7 +1409,7 @@ const ParkManagementPage = () => {
     events: '',
     valid_days: [],
     valid_hours_start: '',
-    valid_hours_end: ''
+    valid_hours_end: '',
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
